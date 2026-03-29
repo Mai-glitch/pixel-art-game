@@ -363,114 +363,82 @@ export class EditorView {
     let isPanning = false;
     let isPainting = false;
     let lastX, lastY;
-    
+
     this.canvas.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
-      if (e.button === 1 || e.button === 2 || e.shiftKey) {
-        // Middle mouse, right click, or shift+click = pan
+
+      if (this.currentMode === 'pan') {
         isPanning = true;
         lastX = e.clientX;
         lastY = e.clientY;
         this.canvas.style.cursor = 'grabbing';
-      } else {
-        // Left click = paint
-        isPainting = true;
-        this.paintAt(x, y);
+      } else if (this.currentMode === 'draw') {
+        if (e.button === 0) {
+          isPainting = true;
+          this.paintAt(x, y);
+        }
       }
     });
-    
+
     this.canvas.addEventListener('pointermove', (e) => {
       e.preventDefault();
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
-      if (isPanning) {
+
+      if (this.currentMode === 'pan' && isPanning) {
         const dx = e.clientX - lastX;
         const dy = e.clientY - lastY;
         this.engine.pan(dx, dy);
         lastX = e.clientX;
         lastY = e.clientY;
         this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
-      } else if (isPainting) {
+      } else if (this.currentMode === 'draw' && isPainting) {
         this.paintAt(x, y);
       }
     });
-    
+
     this.canvas.addEventListener('pointerup', () => {
-      isPanning = false;
-      isPainting = false;
-      this.canvas.style.cursor = 'crosshair';
-      this.checkCompletion();
+      if (this.currentMode === 'pan') {
+        isPanning = false;
+        this.canvas.style.cursor = 'grab';
+      } else if (this.currentMode === 'draw') {
+        isPainting = false;
+        this.canvas.style.cursor = 'crosshair';
+        this.checkCompletion();
+      }
     });
-    
+
     this.canvas.addEventListener('pointerleave', () => {
-      isPanning = false;
-      isPainting = false;
-      this.canvas.style.cursor = 'crosshair';
+      if (this.currentMode === 'pan') {
+        isPanning = false;
+        this.canvas.style.cursor = 'grab';
+      } else if (this.currentMode === 'draw') {
+        isPainting = false;
+        this.canvas.style.cursor = 'crosshair';
+      }
     });
-    
+
     this.canvas.addEventListener('contextmenu', (e) => {
       e.preventDefault();
     });
-    
+
     this.canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
+
+      if (this.currentMode !== 'pan') return;
+
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const delta = e.deltaY > 0 ? -0.2 : 0.2;
-      
+
       this.engine.zoom(delta, x, y);
       this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
     }, { passive: false });
-    
-    // Touch gestures
-    let lastDistance = 0;
-    let lastTouchCenter = null;
-    
-    this.canvas.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        lastDistance = Math.sqrt(dx * dx + dy * dy);
-        lastTouchCenter = {
-          x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-          y: (e.touches[0].clientY + e.touches[1].clientY) / 2
-        };
-      }
-    }, { passive: false });
-    
-    this.canvas.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (lastDistance > 0) {
-          const scale = distance / lastDistance;
-          const delta = (scale - 1) * 2;
-          const centerX = lastTouchCenter.x - this.canvas.getBoundingClientRect().left;
-          const centerY = lastTouchCenter.y - this.canvas.getBoundingClientRect().top;
-          
-          this.engine.zoom(delta, centerX, centerY);
-          this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
-        }
-        
-        lastDistance = distance;
-      }
-    }, { passive: false });
-    
-    this.canvas.addEventListener('touchend', () => {
-      lastDistance = 0;
-      lastTouchCenter = null;
-    });
     
     // Handle window resize
     this.resizeHandler = () => {
