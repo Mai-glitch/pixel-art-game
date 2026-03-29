@@ -16,6 +16,13 @@ export class EditorView {
     this.lastMousePos = null;
     this.resizeHandler = null;
     this.currentMode = 'draw';
+    this.pinchState = {
+      isPinching: false,
+      startDistance: 0,
+      startScale: 1,
+      centerX: 0,
+      centerY: 0
+    };
   }
 
   async mount() {
@@ -242,6 +249,19 @@ export class EditorView {
     this.engine.zoom(delta, centerX, centerY);
     this.updateZoomLabel();
     this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+  }
+
+  getPinchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  getPinchCenter(touches) {
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2
+    };
   }
 
   resetView() {
@@ -483,6 +503,54 @@ export class EditorView {
       this.fitCanvasToContainer();
     };
     window.addEventListener('resize', this.resizeHandler);
+
+    // Pinch-to-zoom gesture handling
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (this.currentMode !== 'pan') return;
+      
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        this.pinchState.isPinching = true;
+        this.pinchState.startDistance = this.getPinchDistance(e.touches);
+        this.pinchState.startScale = this.engine.transform.scale;
+        const center = this.getPinchCenter(e.touches);
+        const rect = this.canvas.getBoundingClientRect();
+        this.pinchState.centerX = center.x - rect.left;
+        this.pinchState.centerY = center.y - rect.top;
+      }
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchmove', (e) => {
+      if (this.currentMode !== 'pan') return;
+      
+      if (this.pinchState.isPinching && e.touches.length === 2) {
+        e.preventDefault();
+        const currentDistance = this.getPinchDistance(e.touches);
+        const scaleRatio = currentDistance / this.pinchState.startDistance;
+        const newScale = this.pinchState.startScale * scaleRatio;
+        const delta = newScale - this.engine.transform.scale;
+        
+        this.engine.zoom(delta, this.pinchState.centerX, this.pinchState.centerY);
+        this.updateZoomLabel();
+        this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+      }
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchend', (e) => {
+      if (this.currentMode !== 'pan') return;
+      
+      if (this.pinchState.isPinching && e.touches.length < 2) {
+        this.pinchState.isPinching = false;
+      }
+    });
+
+    this.canvas.addEventListener('touchcancel', (e) => {
+      if (this.currentMode !== 'pan') return;
+      
+      if (this.pinchState.isPinching) {
+        this.pinchState.isPinching = false;
+      }
+    });
   }
 
   paintAt(x, y) {
