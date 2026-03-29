@@ -39,6 +39,13 @@ export class CanvasEngine {
     this.transform.offsetY = 0;
   }
 
+  centerCanvas() {
+    // Reset offsets to center the canvas in the viewport
+    this.transform.offsetX = 0;
+    this.transform.offsetY = 0;
+    this.constrainPan();
+  }
+
   zoom(delta, centerX, centerY) {
     const newScale = Math.max(
       this.transform.minScale,
