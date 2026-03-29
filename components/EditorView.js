@@ -97,7 +97,7 @@ export class EditorView {
     `;
     
     const drawBtn = document.createElement('button');
-    drawBtn.innerHTML = '🖌️ Dessin';
+    drawBtn.innerHTML = '🖌️ Draw';
     drawBtn.style.cssText = this.getModeButtonStyle('draw');
     drawBtn.addEventListener('click', () => {
       this.currentMode = 'draw';
@@ -106,7 +106,7 @@ export class EditorView {
     drawBtn.id = 'mode-draw';
     
     const panBtn = document.createElement('button');
-    panBtn.innerHTML = '✋ Déplacer';
+    panBtn.innerHTML = '✋ Pan';
     panBtn.style.cssText = this.getModeButtonStyle('pan');
     panBtn.addEventListener('click', () => {
       this.currentMode = 'pan';
@@ -138,6 +138,11 @@ export class EditorView {
       if (this.engine) this.engine.zoomIn();
     });
     
+    const zoomLabel = document.createElement('span');
+    zoomLabel.className = 'zoom-label';
+    zoomLabel.textContent = '100%';
+    zoomLabel.style.cssText = 'color: white; font-weight: 600; min-width: 50px; text-align: center;';
+    
     const zoomResetBtn = document.createElement('button');
     zoomResetBtn.innerHTML = '⟲';
     zoomResetBtn.style.cssText = this.getZoomButtonStyle();
@@ -146,6 +151,7 @@ export class EditorView {
     });
     
     zoomControls.appendChild(zoomOutBtn);
+    zoomControls.appendChild(zoomLabel);
     zoomControls.appendChild(zoomInBtn);
     zoomControls.appendChild(zoomResetBtn);
     
