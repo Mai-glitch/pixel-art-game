@@ -336,6 +336,12 @@ export class EditorView {
       lastDistance = 0;
       lastTouchCenter = null;
     });
+    
+    // Handle window resize
+    this.resizeHandler = () => {
+      this.fitCanvasToContainer();
+    };
+    window.addEventListener('resize', this.resizeHandler);
   }
 
   paintAt(x, y) {
@@ -400,6 +406,9 @@ export class EditorView {
   }
 
   destroy() {
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
+    }
     if (this.element) {
       this.element.remove();
       this.element = null;
