@@ -229,13 +229,6 @@ export class EditorView {
     }
   }
 
-  updateModeButtons() {
-    const drawBtn = document.getElementById('mode-draw');
-    const panBtn = document.getElementById('mode-pan');
-    if (drawBtn) drawBtn.style.cssText = this.getModeButtonStyle('draw');
-    if (panBtn) panBtn.style.cssText = this.getModeButtonStyle('pan');
-  }
-
   renderCanvasArea() {
     const canvasContainer = document.createElement('div');
     canvasContainer.className = 'canvas-container';
