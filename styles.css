@@ -73,6 +73,17 @@ body {
     margin-bottom: 0 !important;
     margin-right: 24px;
   }
+  
+  .palette {
+    max-width: 280px;
+    justify-content: flex-start;
+    padding: 12px;
+  }
+  
+  .palette button {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 /* Large desktop */

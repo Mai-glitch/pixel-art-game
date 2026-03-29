@@ -172,34 +172,36 @@ export class EditorView {
     palette.className = 'palette';
     palette.style.cssText = `
       display: flex;
-      gap: 12px;
-      padding: 16px;
+      gap: 8px;
+      padding: 12px;
       justify-content: center;
       flex-wrap: wrap;
       background: var(--bg-card);
-      border-radius: 12px;
-      margin-top: 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+      max-width: 100%;
     `;
     
     this.puzzle.palette.forEach((color, index) => {
       const btn = document.createElement('button');
       btn.style.cssText = `
-        width: 48px;
-        height: 48px;
-        border: 3px solid ${index + 1 === this.selectedColor ? 'white' : 'transparent'};
-        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        border: 2px solid ${index + 1 === this.selectedColor ? 'white' : 'transparent'};
+        border-radius: 6px;
         background: ${color};
         cursor: pointer;
         position: relative;
+        flex-shrink: 0;
       `;
       
       const number = document.createElement('span');
       number.textContent = index + 1;
       number.style.cssText = `
         position: absolute;
-        top: 2px;
-        left: 4px;
-        font-size: 10px;
+        top: 1px;
+        left: 3px;
+        font-size: 9px;
         font-weight: bold;
         color: ${this.getContrastColor(color)};
       `;
