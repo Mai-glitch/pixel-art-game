@@ -1,0 +1,13 @@
+# Worktrees directory
+.worktrees/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
