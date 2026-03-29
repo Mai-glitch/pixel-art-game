@@ -39,7 +39,7 @@ export class PuzzleCard {
     `;
     
     const engine = new CanvasEngine(canvas);
-    engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+    engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette, 'homepage');
     
     const info = document.createElement('div');
     info.style.cssText = `
