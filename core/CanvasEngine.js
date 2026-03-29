@@ -137,7 +137,7 @@ export class CanvasEngine {
 
   paintPixel(x, y, colorIndex, targetGrid) {
     if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize) return false;
-    if (targetGrid[y][x] !== colorIndex) return false;
+    if (targetGrid[y]?.[x] !== colorIndex) return false;
     return true;
   }
 
