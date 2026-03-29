@@ -130,14 +130,14 @@ export class EditorView {
     zoomOutBtn.innerHTML = '−';
     zoomOutBtn.style.cssText = this.getZoomButtonStyle();
     zoomOutBtn.addEventListener('click', () => {
-      if (this.engine) this.engine.zoomOut();
+      if (this.engine) this.zoom(-0.1);
     });
     
     const zoomInBtn = document.createElement('button');
     zoomInBtn.innerHTML = '+';
     zoomInBtn.style.cssText = this.getZoomButtonStyle();
     zoomInBtn.addEventListener('click', () => {
-      if (this.engine) this.engine.zoomIn();
+      if (this.engine) this.zoom(0.1);
     });
     
     const zoomLabel = document.createElement('span');
@@ -149,7 +149,7 @@ export class EditorView {
     zoomResetBtn.innerHTML = '⟲';
     zoomResetBtn.style.cssText = this.getZoomButtonStyle();
     zoomResetBtn.addEventListener('click', () => {
-      if (this.engine) this.engine.resetZoom();
+      if (this.engine) this.resetView();
     });
     
     zoomControls.appendChild(zoomOutBtn);
@@ -226,6 +226,29 @@ export class EditorView {
         zoomControls.style.opacity = '0.5';
         zoomControls.style.pointerEvents = 'none';
       }
+    }
+  }
+
+  zoom(delta) {
+    const rect = this.canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    this.engine.zoom(delta, centerX, centerY);
+    this.updateZoomLabel();
+    this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+  }
+
+  resetView() {
+    this.engine.resetView();
+    this.updateZoomLabel();
+    this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+  }
+
+  updateZoomLabel() {
+    const label = this.element.querySelector('.zoom-label');
+    if (label) {
+      const percent = Math.round(this.engine.transform.scale * 100);
+      label.textContent = `${percent}%`;
     }
   }
 
