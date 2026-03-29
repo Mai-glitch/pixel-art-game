@@ -7,16 +7,32 @@ export class PuzzleStorage {
 
   async getDefaultPuzzles() {
     if (!this.defaultPuzzles) {
-      const response = await fetch('./data/defaultPuzzles.json');
-      this.defaultPuzzles = await response.json();
+      try {
+        const response = await fetch('./data/defaultPuzzles.json');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch default puzzles: ${response.status}`);
+        }
+        this.defaultPuzzles = await response.json();
+      } catch (error) {
+        console.error('Error loading default puzzles:', error);
+        this.defaultPuzzles = [];
+      }
     }
     return this.defaultPuzzles;
   }
 
   getAll() {
+    if (!this._isLocalStorageAvailable()) {
+      return [];
+    }
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return [];
-    return JSON.parse(stored);
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('Error parsing stored puzzles:', error);
+      return [];
+    }
   }
 
   getById(id) {
@@ -25,6 +41,9 @@ export class PuzzleStorage {
   }
 
   save(puzzle) {
+    if (!this._isLocalStorageAvailable()) {
+      return;
+    }
     const puzzles = this.getAll();
     const index = puzzles.findIndex(p => p.id === puzzle.id);
     const puzzleWithTimestamp = {
@@ -38,7 +57,11 @@ export class PuzzleStorage {
       puzzles.push(puzzleWithTimestamp);
     }
     
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(puzzles));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(puzzles));
+    } catch (error) {
+      console.error('Error saving puzzle:', error);
+    }
   }
 
   saveProgress(id, paintedGrid) {
@@ -52,12 +75,34 @@ export class PuzzleStorage {
     this.save(puzzle);
   }
 
+  _isLocalStorageAvailable() {
+    try {
+      const testKey = '__storage_test__';
+      localStorage.setItem(testKey, testKey);
+      localStorage.removeItem(testKey);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   delete(id) {
+    if (!this._isLocalStorageAvailable()) {
+      return;
+    }
     const puzzles = this.getAll().filter(p => p.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(puzzles));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(puzzles));
+    } catch (error) {
+      console.error('Error deleting puzzle:', error);
+    }
   }
 
   calculatePercent(puzzle) {
+    if (!puzzle.paintedGrid) {
+      return 0;
+    }
+    
     let total = 0;
     let painted = 0;
     
@@ -65,7 +110,7 @@ export class PuzzleStorage {
       for (let x = 0; x < puzzle.targetGrid[y].length; x++) {
         if (puzzle.targetGrid[y][x] > 0) {
           total++;
-          if (puzzle.paintedGrid[y][x] === 1) {
+          if (puzzle.paintedGrid[y] && puzzle.paintedGrid[y][x] === 1) {
             painted++;
           }
         }
@@ -85,8 +130,12 @@ export class PuzzleStorage {
   async initDefaults() {
     const existing = this.getAll();
     if (existing.length === 0) {
-      const defaults = await this.getDefaultPuzzles();
-      defaults.forEach(p => this.save(p));
+      try {
+        const defaults = await this.getDefaultPuzzles();
+        defaults.forEach(p => this.save(p));
+      } catch (error) {
+        console.error('Error initializing default puzzles:', error);
+      }
     }
   }
 }
