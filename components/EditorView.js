@@ -176,10 +176,10 @@ export class EditorView {
       padding: 12px;
       justify-content: center;
       flex-wrap: wrap;
+      max-width: ${4 * 36 + 3 * 8}px; /* 4 boutons × 36px + 3 gaps × 8px = 168px */
+      margin: 12px auto 0;
       background: var(--bg-card);
       border-radius: 8px;
-      margin-top: 12px;
-      max-width: 100%;
     `;
     
     this.puzzle.palette.forEach((color, index) => {
