@@ -360,10 +360,6 @@ export class EditorView {
   }
 
   setupEventListeners() {
-    let isPanning = false;
-    let isPainting = false;
-    let lastX, lastY;
-
     this.canvas.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       const rect = this.canvas.getBoundingClientRect();
@@ -371,13 +367,12 @@ export class EditorView {
       const y = e.clientY - rect.top;
 
       if (this.currentMode === 'pan') {
-        isPanning = true;
-        lastX = e.clientX;
-        lastY = e.clientY;
+        this.isDragging = true;
+        this.lastMousePos = { x: e.clientX, y: e.clientY };
         this.canvas.style.cursor = 'grabbing';
       } else if (this.currentMode === 'draw') {
         if (e.button === 0) {
-          isPainting = true;
+          this.isPainting = true;
           this.paintAt(x, y);
         }
       }
@@ -389,35 +384,34 @@ export class EditorView {
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      if (this.currentMode === 'pan' && isPanning) {
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
+      if (this.currentMode === 'pan' && this.isDragging) {
+        const dx = e.clientX - this.lastMousePos.x;
+        const dy = e.clientY - this.lastMousePos.y;
         this.engine.pan(dx, dy);
-        lastX = e.clientX;
-        lastY = e.clientY;
+        this.lastMousePos = { x: e.clientX, y: e.clientY };
         this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
-      } else if (this.currentMode === 'draw' && isPainting) {
+      } else if (this.currentMode === 'draw' && this.isPainting) {
         this.paintAt(x, y);
       }
     });
 
     this.canvas.addEventListener('pointerup', () => {
-      if (this.currentMode === 'pan') {
-        isPanning = false;
+      if (this.currentMode === 'pan' && this.isDragging) {
+        this.isDragging = false;
         this.canvas.style.cursor = 'grab';
-      } else if (this.currentMode === 'draw') {
-        isPainting = false;
+      } else if (this.currentMode === 'draw' && this.isPainting) {
+        this.isPainting = false;
         this.canvas.style.cursor = 'crosshair';
         this.checkCompletion();
       }
     });
 
     this.canvas.addEventListener('pointerleave', () => {
-      if (this.currentMode === 'pan') {
-        isPanning = false;
+      if (this.currentMode === 'pan' && this.isDragging) {
+        this.isDragging = false;
         this.canvas.style.cursor = 'grab';
-      } else if (this.currentMode === 'draw') {
-        isPainting = false;
+      } else if (this.currentMode === 'draw' && this.isPainting) {
+        this.isPainting = false;
         this.canvas.style.cursor = 'crosshair';
       }
     });
