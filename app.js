@@ -1,3 +1,6 @@
+import { HomeView } from './components/HomeView.js';
+import { PuzzleStorage } from './core/PuzzleStorage.js';
+
 class PixelArtApp {
   constructor() {
     this.app = document.getElementById('app');
@@ -36,8 +39,10 @@ class PixelArtApp {
     this.app.innerHTML = '';
   }
 
-  loadHomeView() {
-    this.app.innerHTML = '<div id="home-view">Home View Placeholder</div>';
+  async loadHomeView() {
+    const view = new HomeView(this.app);
+    this.currentView = view;
+    await view.mount();
   }
 
   loadEditorView(puzzleId) {
