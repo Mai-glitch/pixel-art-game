@@ -25,6 +25,14 @@ export class CanvasEngine {
     this.canvas.style.maxWidth = '512px';
   }
 
+  resize(newSize) {
+    this.baseSize = newSize;
+    this.pixelSize = this.baseSize / this.gridSize;
+    this.canvas.width = this.baseSize;
+    this.canvas.height = this.baseSize;
+    this.canvas.style.maxWidth = `${newSize}px`;
+  }
+
   resetView() {
     this.transform.scale = 1.0;
     this.transform.offsetX = 0;
