@@ -1,0 +1,27 @@
+:root {
+  --bg-primary: #1a0f2e;
+  --bg-card: #2d1b4e;
+  --accent-primary: #ff6b35;
+  --accent-secondary: #f7931e;
+  --highlight: #ff006e;
+  --text-primary: #fff5e6;
+  --grid-lines: #4a1c4a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
