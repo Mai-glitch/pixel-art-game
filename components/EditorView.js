@@ -100,8 +100,7 @@ export class EditorView {
     drawBtn.innerHTML = '🖌️ Draw';
     drawBtn.style.cssText = this.getModeButtonStyle('draw');
     drawBtn.addEventListener('click', () => {
-      this.currentMode = 'draw';
-      this.updateModeButtons();
+      this.setMode('draw');
     });
     drawBtn.id = 'mode-draw';
     
@@ -109,8 +108,7 @@ export class EditorView {
     panBtn.innerHTML = '✋ Pan';
     panBtn.style.cssText = this.getModeButtonStyle('pan');
     panBtn.addEventListener('click', () => {
-      this.currentMode = 'pan';
-      this.updateModeButtons();
+      this.setMode('pan');
     });
     panBtn.id = 'mode-pan';
     
@@ -118,10 +116,14 @@ export class EditorView {
     modeSwitcher.appendChild(panBtn);
     
     const zoomControls = document.createElement('div');
+    zoomControls.id = 'zoom-controls';
     zoomControls.style.cssText = `
       display: flex;
       gap: 4px;
       align-items: center;
+      opacity: 0.5;
+      pointer-events: none;
+      transition: opacity 0.2s;
     `;
     
     const zoomOutBtn = document.createElement('button');
@@ -189,6 +191,42 @@ export class EditorView {
       justify-content: center;
       transition: background 0.2s;
     `;
+  }
+
+  setMode(mode) {
+    if (this.currentMode === mode) return;
+    
+    this.isPainting = false;
+    this.isDragging = false;
+    this.lastMousePos = null;
+    
+    this.currentMode = mode;
+    this.updateModeUI();
+    this.updateZoomControls();
+    
+    if (this.canvas) {
+      this.canvas.style.cursor = mode === 'draw' ? 'crosshair' : 'grab';
+    }
+  }
+
+  updateModeUI() {
+    const drawBtn = document.getElementById('mode-draw');
+    const panBtn = document.getElementById('mode-pan');
+    if (drawBtn) drawBtn.style.cssText = this.getModeButtonStyle('draw');
+    if (panBtn) panBtn.style.cssText = this.getModeButtonStyle('pan');
+  }
+
+  updateZoomControls() {
+    const zoomControls = document.getElementById('zoom-controls');
+    if (zoomControls) {
+      if (this.currentMode === 'pan') {
+        zoomControls.style.opacity = '1';
+        zoomControls.style.pointerEvents = 'auto';
+      } else {
+        zoomControls.style.opacity = '0.5';
+        zoomControls.style.pointerEvents = 'none';
+      }
+    }
   }
 
   updateModeButtons() {
