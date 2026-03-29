@@ -14,6 +14,7 @@ export class EditorView {
     this.isPainting = false;
     this.isDragging = false;
     this.lastMousePos = null;
+    this.resizeHandler = null;
   }
 
   async mount() {
@@ -119,12 +120,45 @@ export class EditorView {
 
     // Auto-fit to container on load
     setTimeout(() => {
-      const containerRect = canvasContainer.getBoundingClientRect();
-      const minDimension = Math.min(containerRect.width, containerRect.height) - 32;
-      const scale = Math.min(1, minDimension / 512);
-      this.engine.transform.scale = Math.max(0.5, scale);
-      this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+      this.fitCanvasToContainer();
     }, 0);
+  }
+
+  calculateOptimalCanvasSize() {
+    const canvasContainer = this.element.querySelector('.canvas-container');
+    if (!canvasContainer) return 512;
+    
+    const containerRect = canvasContainer.getBoundingClientRect();
+    // Soustraire le padding (16px de chaque côté)
+    const availableWidth = containerRect.width - 32;
+    const availableHeight = containerRect.height - 32;
+    
+    // Prendre la dimension la plus petite pour garder le ratio carré
+    const minDimension = Math.min(availableWidth, availableHeight);
+    
+    // Limiter entre 256px (minimum utilisable) et 1024px (maximum)
+    return Math.max(256, Math.min(1024, Math.floor(minDimension)));
+  }
+
+  fitCanvasToContainer() {
+    const optimalSize = this.calculateOptimalCanvasSize();
+    
+    if (optimalSize !== this.engine.baseSize) {
+      this.engine.resize(optimalSize);
+    }
+    
+    // Calculer le scale pour que le canvas remplisse le container
+    const canvasContainer = this.element.querySelector('.canvas-container');
+    const containerRect = canvasContainer.getBoundingClientRect();
+    const availableSpace = Math.min(
+      containerRect.width - 32,
+      containerRect.height - 32
+    );
+    
+    const scale = Math.min(1, availableSpace / optimalSize);
+    this.engine.transform.scale = Math.max(0.5, scale);
+    
+    this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
   }
 
   renderPalette() {
