@@ -69,8 +69,10 @@ export class CanvasEngine {
     const scaleX = this.canvas.width / rect.width;
     const scaleY = this.canvas.height / rect.height;
 
-    const x = (screenX - rect.left) * scaleX;
-    const y = (screenY - rect.top) * scaleY;
+    // screenX and screenY are already relative to the canvas (local coordinates)
+    // Convert to canvas pixels then to grid coordinates
+    const x = screenX * scaleX;
+    const y = screenY * scaleY;
 
     const gridX = Math.floor((x - this.transform.offsetX) / (this.pixelSize * this.transform.scale));
     const gridY = Math.floor((y - this.transform.offsetY) / (this.pixelSize * this.transform.scale));
