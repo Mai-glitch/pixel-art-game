@@ -65,11 +65,28 @@ export class CanvasEngine {
 
   constrainPan() {
     const scaledSize = this.baseSize * this.transform.scale;
-    const maxOffsetX = Math.max(0, (scaledSize - this.canvas.width) / 2);
-    const maxOffsetY = Math.max(0, (scaledSize - this.canvas.height) / 2);
-
-    this.transform.offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, this.transform.offsetX));
-    this.transform.offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, this.transform.offsetY));
+    
+    // If canvas is smaller than or equal to viewport, center it
+    if (scaledSize <= this.canvas.width) {
+      this.transform.offsetX = 0;
+    } else {
+      // Prevent showing empty space on left/right
+      // offsetX <= 0 (can't push content right, which would show empty left side)
+      // offsetX >= canvas.width - scaledSize (can't push content left past right edge)
+      this.transform.offsetX = Math.max(
+        this.canvas.width - scaledSize, // negative or zero
+        Math.min(0, this.transform.offsetX)
+      );
+    }
+    
+    if (scaledSize <= this.canvas.height) {
+      this.transform.offsetY = 0;
+    } else {
+      this.transform.offsetY = Math.max(
+        this.canvas.height - scaledSize,
+        Math.min(0, this.transform.offsetY)
+      );
+    }
   }
 
   screenToGrid(screenX, screenY) {
