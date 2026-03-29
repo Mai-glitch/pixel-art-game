@@ -128,6 +128,12 @@ export class EditorView {
   }
 
   renderPalette() {
+    // Remove existing palette if it exists to prevent duplication
+    const existingPalette = this.element.querySelector('.palette');
+    if (existingPalette) {
+      existingPalette.remove();
+    }
+    
     const palette = document.createElement('div');
     palette.className = 'palette';
     palette.style.cssText = `
