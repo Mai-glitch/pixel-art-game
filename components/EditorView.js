@@ -462,7 +462,22 @@ export class EditorView {
       this.engine.zoom(delta, x, y);
       this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
     }, { passive: false });
-    
+
+    // Double-click to zoom
+    this.canvas.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+
+      if (this.currentMode !== 'pan') return;
+
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      this.engine.zoom(0.3, x, y);
+      this.updateZoomLabel();
+      this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+    });
+
     // Handle window resize
     this.resizeHandler = () => {
       this.fitCanvasToContainer();
