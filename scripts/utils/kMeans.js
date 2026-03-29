@@ -121,9 +121,55 @@ function rgbToHex(color) {
     .join('');
 }
 
+/**
+ * Merge colors that are too similar to each other
+ * @param {Array<{r: number, g: number, b: number}>} colors - Array of colors
+ * @param {number} threshold - Distance threshold for merging (default: 30)
+ * @returns {Array<{r: number, g: number, b: number}>} Merged colors
+ */
+function mergeSimilarColors(colors, threshold = 30) {
+  if (colors.length <= 3) {
+    return colors;
+  }
+
+  const merged = [];
+  const used = new Set();
+
+  for (let i = 0; i < colors.length; i++) {
+    if (used.has(i)) continue;
+
+    let color = { ...colors[i] };
+    const group = [color];
+
+    for (let j = i + 1; j < colors.length; j++) {
+      if (used.has(j)) continue;
+
+      const dist = colorDistance(color, colors[j]);
+      if (dist < threshold) {
+        group.push(colors[j]);
+        used.add(j);
+      }
+    }
+
+    // Calculate average of merged group
+    if (group.length > 1) {
+      color = {
+        r: Math.round(group.reduce((sum, c) => sum + c.r, 0) / group.length),
+        g: Math.round(group.reduce((sum, c) => sum + c.g, 0) / group.length),
+        b: Math.round(group.reduce((sum, c) => sum + c.b, 0) / group.length)
+      };
+    }
+
+    merged.push(color);
+  }
+
+  return merged;
+}
+
 module.exports = {
   kMeans,
   colorDistance,
   findClosestColor,
-  rgbToHex
+  rgbToHex,
+  mergeSimilarColors
 };
