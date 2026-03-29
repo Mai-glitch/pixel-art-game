@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { processImage, formatDisplayName, generatePuzzleId, TARGET_SIZE, MAX_COLORS, OPACITY_THRESHOLD } = require('./utils/imageProcessor.js');
-const { kMeans, findClosestColor, rgbToHex } = require('./utils/kMeans.js');
+const { kMeans, findClosestColor, rgbToHex, mergeSimilarColors } = require('./utils/kMeans.js');
 
 const IMAGES_DIR = path.join(__dirname, '..', 'images');
 const OUTPUT_FILE = path.join(__dirname, '..', 'data', 'defaultPuzzles.json');
@@ -20,8 +20,19 @@ async function convertImageToPuzzle(imagePath) {
   const { pixels, opaquePixels } = await processImage(imagePath);
 
   // Get palette using k-means (limit to MAX_COLORS)
-  const colorPalette = kMeans(opaquePixels, MAX_COLORS);
-  const palette = colorPalette.map(rgbToHex);
+  const kMeansResult = kMeans(opaquePixels, MAX_COLORS);
+  
+  // Merge similar colors to create more distinct palette
+  const mergedColors = mergeSimilarColors(kMeansResult, 35); // Threshold of 35 for aggressive merging
+  
+  // Ensure we don't exceed MAX_COLORS after merging
+  let finalColors = mergedColors;
+  if (finalColors.length > MAX_COLORS) {
+    // If still too many colors after merging, run k-means again
+    finalColors = kMeans(finalColors, MAX_COLORS);
+  }
+  
+  const palette = finalColors.map(rgbToHex);
 
   // Ensure minimum 3 colors
   while (palette.length < 3) {
