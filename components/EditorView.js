@@ -67,7 +67,7 @@ export class EditorView {
     `;
     
     const backBtn = document.createElement('button');
-    backBtn.textContent = 'Back';
+    backBtn.textContent = 'Retour';
     backBtn.style.cssText = `
       background: rgba(255,255,255,0.1);
       color: white;
@@ -110,7 +110,7 @@ export class EditorView {
     `;
     
     const drawBtn = document.createElement('button');
-    drawBtn.innerHTML = '🖌️ Draw';
+    drawBtn.innerHTML = '🖌️ Dessiner';
     drawBtn.style.cssText = this.getModeButtonStyle('draw');
     drawBtn.addEventListener('click', () => {
       this.setMode('draw');
@@ -118,7 +118,7 @@ export class EditorView {
     drawBtn.id = 'mode-draw';
     
     const panBtn = document.createElement('button');
-    panBtn.innerHTML = '✋ Pan';
+    panBtn.innerHTML = '✋ Déplacer';
     panBtn.style.cssText = this.getModeButtonStyle('pan');
     panBtn.addEventListener('click', () => {
       this.setMode('pan');
@@ -392,9 +392,10 @@ export class EditorView {
       number.textContent = index + 1;
       number.style.cssText = `
         position: absolute;
-        top: 1px;
-        left: 3px;
-        font-size: 9px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 14px;
         font-weight: bold;
         color: ${this.getContrastColor(color)};
       `;

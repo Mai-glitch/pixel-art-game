@@ -39,7 +39,7 @@ export class ImportModal {
     `;
     
     const title = document.createElement('h2');
-    title.textContent = 'Import Image';
+    title.textContent = 'Importer une image';
     title.style.cssText = `
       margin: 0 0 24px 0;
       font-size: 24px;

@@ -38,7 +38,7 @@ export class HomeView {
     `;
     
     const importBtn = document.createElement('button');
-    importBtn.textContent = 'Import Image';
+    importBtn.textContent = 'Importer une image';
     importBtn.style.cssText = `
       background: var(--accent-primary);
       color: white;
@@ -70,23 +70,56 @@ export class HomeView {
       `;
       this.element.appendChild(emptyState);
     } else {
-      const grid = document.createElement('div');
-      grid.className = 'puzzle-grid';
-      grid.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 20px;
-      `;
+      // Grouper les puzzles par statut
+      const completed = puzzles.filter(p => p.completedPercent === 100);
+      const inProgress = puzzles.filter(p => p.completedPercent > 0 && p.completedPercent < 100);
+      const notStarted = puzzles.filter(p => !p.completedPercent || p.completedPercent === 0);
       
-      puzzles.forEach(puzzle => {
-        const card = new PuzzleCard(puzzle, (id) => {
-          window.location.hash = `#editor/${id}`;
+      // Fonction pour créer une section de puzzles
+      const createSection = (title, puzzleList) => {
+        if (puzzleList.length === 0) return null;
+        
+        const section = document.createElement('div');
+        section.style.cssText = 'margin-bottom: 32px;';
+        
+        const sectionTitle = document.createElement('h2');
+        sectionTitle.textContent = title;
+        sectionTitle.style.cssText = `
+          font-size: 20px;
+          font-weight: 600;
+          margin: 0 0 16px 0;
+          color: rgba(255, 255, 255, 0.9);
+        `;
+        section.appendChild(sectionTitle);
+        
+        const grid = document.createElement('div');
+        grid.className = 'puzzle-grid';
+        grid.style.cssText = `
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 20px;
+        `;
+        
+        puzzleList.forEach(puzzle => {
+          const card = new PuzzleCard(puzzle, (id) => {
+            window.location.hash = `#editor/${id}`;
+          });
+          this.cards.push(card);
+          grid.appendChild(card.render());
         });
-        this.cards.push(card);
-        grid.appendChild(card.render());
-      });
+        
+        section.appendChild(grid);
+        return section;
+      };
       
-      this.element.appendChild(grid);
+      // Ajouter les sections dans l'ordre
+      const completedSection = createSection('Terminés', completed);
+      const inProgressSection = createSection('En cours', inProgress);
+      const notStartedSection = createSection('À découvrir', notStarted);
+      
+      if (completedSection) this.element.appendChild(completedSection);
+      if (inProgressSection) this.element.appendChild(inProgressSection);
+      if (notStartedSection) this.element.appendChild(notStartedSection);
     }
     
     this.container.appendChild(this.element);

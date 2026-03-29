@@ -12,7 +12,7 @@ test('painting functionality works correctly', async ({ page }) => {
   await page.waitForTimeout(1500);
 
   // Verify we're in the editor
-  const backButton = page.locator('button:has-text("Back")');
+  const backButton = page.locator('button:has-text("Retour")');
   await expect(backButton).toBeVisible();
 
   // Get initial progress

@@ -14,7 +14,7 @@ test('Bug report reproduction steps - should now work', async ({ page }) => {
   await page.waitForTimeout(1500);
 
   // Verify we're in editor view
-  const backButton = page.locator('button:has-text("Back")');
+  const backButton = page.locator('button:has-text("Retour")');
   await expect(backButton).toBeVisible();
   console.log('  ✓ Editor view loaded');
 

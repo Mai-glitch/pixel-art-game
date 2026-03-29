@@ -23,7 +23,7 @@ test('Debug painting issue', async ({ page }) => {
   await page.waitForTimeout(1000);
 
   // Check if we're on the editor view
-  const backButton = page.locator('button:has-text("Back")');
+  const backButton = page.locator('button:has-text("Retour")');
   await expect(backButton).toBeVisible();
 
   // Take a snapshot to see the current state
