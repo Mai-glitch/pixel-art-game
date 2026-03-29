@@ -19,9 +19,80 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #app {
   width: 100%;
   min-height: 100vh;
+}
+
+/* Mobile-first responsive design */
+
+/* Mobile styles (default) */
+.puzzle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.puzzle-card h3 {
+  font-size: 14px;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+  .puzzle-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  
+  .puzzle-card h3 {
+    font-size: 15px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .puzzle-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  
+  .puzzle-card h3 {
+    font-size: 16px;
+  }
+  
+  #editor-view {
+    flex-direction: row !important;
+  }
+  
+  #editor-view header {
+    flex-direction: column;
+    width: 200px;
+    margin-bottom: 0 !important;
+    margin-right: 24px;
+  }
+}
+
+/* Large desktop */
+@media (min-width: 1440px) {
+  .puzzle-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Touch targets for mobile */
+button, 
+.puzzle-card,
+input[type="file"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent text selection during drag */
+#editor-view canvas {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }

@@ -89,6 +89,7 @@ export class EditorView {
 
   renderCanvasArea() {
     const canvasContainer = document.createElement('div');
+    canvasContainer.className = 'canvas-container';
     canvasContainer.style.cssText = `
       flex: 1;
       display: flex;
@@ -99,24 +100,36 @@ export class EditorView {
       padding: 16px;
       overflow: hidden;
       position: relative;
+      min-height: 300px;
     `;
-    
+
     this.canvas = document.createElement('canvas');
     this.canvas.style.cssText = `
       max-width: 100%;
       max-height: 100%;
+      width: auto;
+      height: auto;
       cursor: crosshair;
     `;
-    
+
     canvasContainer.appendChild(this.canvas);
     this.element.appendChild(canvasContainer);
-    
+
     this.engine = new CanvasEngine(this.canvas);
-    this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+
+    // Auto-fit to container on load
+    setTimeout(() => {
+      const containerRect = canvasContainer.getBoundingClientRect();
+      const minDimension = Math.min(containerRect.width, containerRect.height) - 32;
+      const scale = Math.min(1, minDimension / 512);
+      this.engine.transform.scale = Math.max(0.5, scale);
+      this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+    }, 0);
   }
 
   renderPalette() {
     const palette = document.createElement('div');
+    palette.className = 'palette';
     palette.style.cssText = `
       display: flex;
       gap: 12px;
