@@ -371,16 +371,21 @@ export class EditorView {
     `;
     
     this.puzzle.palette.forEach((color, index) => {
+      const isSelected = index + 1 === this.selectedColor;
       const btn = document.createElement('button');
       btn.style.cssText = `
         width: 36px;
         height: 36px;
-        border: 2px solid ${index + 1 === this.selectedColor ? 'white' : 'transparent'};
+        border: ${isSelected ? '3px solid #ff6b35' : '2px solid transparent'};
         border-radius: 6px;
         background: ${color};
         cursor: pointer;
         position: relative;
         flex-shrink: 0;
+        transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
+        box-shadow: ${isSelected ? '0 0 8px rgba(255, 107, 53, 0.6)' : 'none'};
+        z-index: ${isSelected ? '10' : '1'};
+        transition: all 0.2s ease;
       `;
       
       const number = document.createElement('span');
