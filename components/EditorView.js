@@ -40,6 +40,12 @@ export class EditorView {
     
     this.container.appendChild(this.element);
     this.setupEventListeners();
+    
+    // Set initial cursor based on default mode
+    this.canvas.style.cursor = 'crosshair';
+    
+    // Initialize zoom controls visibility
+    this.updateZoomControls();
   }
 
   renderHeader() {
