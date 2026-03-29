@@ -15,6 +15,7 @@ export class EditorView {
     this.isDragging = false;
     this.lastMousePos = null;
     this.resizeHandler = null;
+    this.currentMode = 'draw';
   }
 
   async mount() {
@@ -85,7 +86,110 @@ export class EditorView {
     header.appendChild(backBtn);
     header.appendChild(title);
     header.appendChild(progress);
+    
+    const modeSwitcher = document.createElement('div');
+    modeSwitcher.style.cssText = `
+      display: flex;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      padding: 4px;
+      border-radius: 8px;
+    `;
+    
+    const drawBtn = document.createElement('button');
+    drawBtn.innerHTML = '🖌️ Dessin';
+    drawBtn.style.cssText = this.getModeButtonStyle('draw');
+    drawBtn.addEventListener('click', () => {
+      this.currentMode = 'draw';
+      this.updateModeButtons();
+    });
+    drawBtn.id = 'mode-draw';
+    
+    const panBtn = document.createElement('button');
+    panBtn.innerHTML = '✋ Déplacer';
+    panBtn.style.cssText = this.getModeButtonStyle('pan');
+    panBtn.addEventListener('click', () => {
+      this.currentMode = 'pan';
+      this.updateModeButtons();
+    });
+    panBtn.id = 'mode-pan';
+    
+    modeSwitcher.appendChild(drawBtn);
+    modeSwitcher.appendChild(panBtn);
+    
+    const zoomControls = document.createElement('div');
+    zoomControls.style.cssText = `
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    `;
+    
+    const zoomOutBtn = document.createElement('button');
+    zoomOutBtn.innerHTML = '−';
+    zoomOutBtn.style.cssText = this.getZoomButtonStyle();
+    zoomOutBtn.addEventListener('click', () => {
+      if (this.engine) this.engine.zoomOut();
+    });
+    
+    const zoomInBtn = document.createElement('button');
+    zoomInBtn.innerHTML = '+';
+    zoomInBtn.style.cssText = this.getZoomButtonStyle();
+    zoomInBtn.addEventListener('click', () => {
+      if (this.engine) this.engine.zoomIn();
+    });
+    
+    const zoomResetBtn = document.createElement('button');
+    zoomResetBtn.innerHTML = '⟲';
+    zoomResetBtn.style.cssText = this.getZoomButtonStyle();
+    zoomResetBtn.addEventListener('click', () => {
+      if (this.engine) this.engine.resetZoom();
+    });
+    
+    zoomControls.appendChild(zoomOutBtn);
+    zoomControls.appendChild(zoomInBtn);
+    zoomControls.appendChild(zoomResetBtn);
+    
+    header.appendChild(modeSwitcher);
+    header.appendChild(zoomControls);
     this.element.appendChild(header);
+  }
+
+  getModeButtonStyle(mode) {
+    const isActive = this.currentMode === mode;
+    return `
+      background: ${isActive ? 'white' : 'transparent'};
+      color: ${isActive ? '#1a1a2e' : 'white'};
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: ${isActive ? '600' : '400'};
+      transition: all 0.2s;
+    `;
+  }
+
+  getZoomButtonStyle() {
+    return `
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    `;
+  }
+
+  updateModeButtons() {
+    const drawBtn = document.getElementById('mode-draw');
+    const panBtn = document.getElementById('mode-pan');
+    if (drawBtn) drawBtn.style.cssText = this.getModeButtonStyle('draw');
+    if (panBtn) panBtn.style.cssText = this.getModeButtonStyle('pan');
   }
 
   renderCanvasArea() {
