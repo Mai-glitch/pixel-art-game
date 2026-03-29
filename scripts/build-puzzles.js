@@ -59,7 +59,7 @@ async function convertImageToPuzzle(imagePath) {
     name: formatDisplayName(filename),
     targetGrid,
     paintedGrid,
-    palette: palette.slice(0, Math.max(3, palette.length)),
+    palette: palette,
     completedPercent: 0,
     lastPlayed: null
   };
@@ -83,8 +83,8 @@ function validatePuzzle(puzzle) {
 
     for (let j = 0; j < puzzle.targetGrid[i].length; j++) {
       const val = puzzle.targetGrid[i][j];
-      if (!Number.isInteger(val) || val < 0 || val > MAX_COLORS) {
-        throw new Error(`Invalid value at [${i}][${j}]: ${val} (must be 0-${MAX_COLORS})`);
+      if (!Number.isInteger(val) || val < 0 || val > puzzle.palette.length) {
+        throw new Error(`Invalid value at [${i}][${j}]: ${val} (must be 0-${puzzle.palette.length})`);
       }
     }
   }
