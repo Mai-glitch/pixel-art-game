@@ -25,12 +25,8 @@ async function convertImageToPuzzle(imagePath) {
   // Merge similar colors to create more distinct palette
   const mergedColors = mergeSimilarColors(kMeansResult, 35); // Threshold of 35 for aggressive merging
   
-  // Ensure we don't exceed MAX_COLORS after merging
-  let finalColors = mergedColors;
-  if (finalColors.length > MAX_COLORS) {
-    // If still too many colors after merging, run k-means again
-    finalColors = kMeans(finalColors, MAX_COLORS);
-  }
+  // Use merged colors directly since mergeSimilarColors already reduces the palette
+  const finalColors = mergedColors;
   
   const palette = finalColors.map(rgbToHex);
 
@@ -52,7 +48,7 @@ async function convertImageToPuzzle(imagePath) {
       } else {
         const colorIndex = findClosestColor(
           { r: pixel.r, g: pixel.g, b: pixel.b },
-          colorPalette
+          finalColors
         );
         row.push(colorIndex + 1); // 1-based indexing for colors
       }
