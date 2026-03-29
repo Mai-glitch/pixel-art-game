@@ -88,19 +88,26 @@ export class CanvasEngine {
     return `rgba(${gray}, ${gray}, ${gray}, ${opacity})`;
   }
 
-  render(targetGrid, paintedGrid, palette) {
+  applyColorOpacity(hex, opacity = 0.4) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  render(targetGrid, paintedGrid, palette, renderMode = 'editor') {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.save();
     this.ctx.translate(this.transform.offsetX, this.transform.offsetY);
     this.ctx.scale(this.transform.scale, this.transform.scale);
 
-    this.drawGrid(targetGrid, paintedGrid, palette);
+    this.drawGrid(targetGrid, paintedGrid, palette, renderMode);
 
     this.ctx.restore();
   }
 
-  drawGrid(targetGrid, paintedGrid, palette) {
+  drawGrid(targetGrid, paintedGrid, palette, renderMode = 'editor') {
     for (let y = 0; y < this.gridSize; y++) {
       for (let x = 0; x < this.gridSize; x++) {
         const targetColor = targetGrid[y]?.[x] || 0;
@@ -114,19 +121,25 @@ export class CanvasEngine {
             this.ctx.fillStyle = palette[targetColor - 1];
             this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
           } else {
-            const desaturated = this.desaturateColor(palette[targetColor - 1]);
-            this.ctx.fillStyle = desaturated;
-            this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
+            if (renderMode === 'homepage') {
+              const fadedColor = this.applyColorOpacity(palette[targetColor - 1]);
+              this.ctx.fillStyle = fadedColor;
+              this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
+            } else {
+              const desaturated = this.desaturateColor(palette[targetColor - 1]);
+              this.ctx.fillStyle = desaturated;
+              this.ctx.fillRect(pixelX, pixelY, this.pixelSize, this.pixelSize);
 
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.font = `bold ${this.pixelSize * 0.5}px sans-serif`;
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillText(
-              targetColor.toString(),
-              pixelX + this.pixelSize / 2,
-              pixelY + this.pixelSize / 2
-            );
+              this.ctx.fillStyle = '#ffffff';
+              this.ctx.font = `bold ${this.pixelSize * 0.5}px sans-serif`;
+              this.ctx.textAlign = 'center';
+              this.ctx.textBaseline = 'middle';
+              this.ctx.fillText(
+                targetColor.toString(),
+                pixelX + this.pixelSize / 2,
+                pixelY + this.pixelSize / 2
+              );
+            }
           }
         }
 
