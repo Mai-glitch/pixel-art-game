@@ -96,5 +96,6 @@ module.exports = {
   formatDisplayName,
   generatePuzzleId,
   TARGET_SIZE,
+  MAX_COLORS,
   OPACITY_THRESHOLD
 };

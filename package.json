@@ -9,7 +9,8 @@
   "scripts": {
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui",
-    "dev": "npx serve . -l 8080"
+    "dev": "npx serve . -l 8080",
+    "build:puzzles": "node scripts/build-puzzles.js"
   },
   "keywords": [],
   "author": "",
