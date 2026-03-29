@@ -1,5 +1,6 @@
 import { HomeView } from './components/HomeView.js';
 import { EditorView } from './components/EditorView.js';
+import { ImportModal } from './components/ImportModal.js';
 import { PuzzleStorage } from './core/PuzzleStorage.js';
 
 class PixelArtApp {
@@ -26,6 +27,9 @@ class PixelArtApp {
         break;
       case 'editor':
         this.loadEditorView(param);
+        break;
+      case 'import':
+        this.loadImportModal();
         break;
       default:
         this.loadHomeView();
@@ -54,6 +58,12 @@ class PixelArtApp {
     const view = new EditorView(this.app, puzzleId);
     this.currentView = view;
     await view.mount();
+  }
+
+  loadImportModal() {
+    const modal = new ImportModal(this.app);
+    this.currentView = modal;
+    modal.mount();
   }
 }
 
