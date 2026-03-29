@@ -346,7 +346,13 @@ export class EditorView {
     );
     
     const scale = Math.min(1, availableSpace / optimalSize);
-    this.engine.transform.scale = Math.max(0.5, scale);
+    const newScale = Math.max(0.5, scale);
+    
+    // Si le scale a changé significativement, recentrer le canvas
+    if (Math.abs(newScale - this.engine.transform.scale) > 0.01) {
+      this.engine.transform.scale = newScale;
+      this.engine.centerCanvas();
+    }
     
     this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
   }
