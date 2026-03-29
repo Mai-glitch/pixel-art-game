@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { processImage, formatDisplayName, generatePuzzleId, TARGET_SIZE, MAX_COLORS } = require('./utils/imageProcessor.js');
+const { processImage, formatDisplayName, generatePuzzleId, TARGET_SIZE, MAX_COLORS, OPACITY_THRESHOLD } = require('./utils/imageProcessor.js');
 const { kMeans, findClosestColor, rgbToHex } = require('./utils/kMeans.js');
 
 const IMAGES_DIR = path.join(__dirname, '..', 'images');
@@ -36,7 +36,7 @@ async function convertImageToPuzzle(imagePath) {
       const pixelIndex = y * TARGET_SIZE + x;
       const pixel = pixels[pixelIndex];
 
-      if (pixel.a < 128) {
+      if (pixel.a < OPACITY_THRESHOLD) {
         row.push(0); // Transparent
       } else {
         const colorIndex = findClosestColor(
