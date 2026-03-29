@@ -93,6 +93,26 @@ body {
   }
 }
 
+/* Palette styles */
+.palette {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 12px auto 0;
+  border-radius: 8px;
+  /* Mobile: pas de limite de largeur */
+  max-width: none;
+}
+
+/* Desktop: max 4 couleurs par ligne */
+@media (min-width: 1024px) {
+  .palette {
+    max-width: 168px;
+  }
+}
+
 /* Touch targets for mobile */
 button, 
 .puzzle-card,

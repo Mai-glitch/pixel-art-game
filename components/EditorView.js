@@ -171,15 +171,7 @@ export class EditorView {
     const palette = document.createElement('div');
     palette.className = 'palette';
     palette.style.cssText = `
-      display: flex;
-      gap: 8px;
-      padding: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      max-width: ${4 * 36 + 3 * 8}px; /* 4 boutons × 36px + 3 gaps × 8px = 168px */
-      margin: 12px auto 0;
       background: var(--bg-card);
-      border-radius: 8px;
     `;
     
     this.puzzle.palette.forEach((color, index) => {
