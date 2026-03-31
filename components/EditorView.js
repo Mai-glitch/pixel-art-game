@@ -359,8 +359,8 @@ export class EditorView {
       containerRect.height - 32
     );
     
-    const scale = Math.min(1, availableSpace / optimalSize);
-    const newScale = Math.max(0.5, scale);
+    const scale = Math.min(this.engine.transform.maxScale, availableSpace / optimalSize);
+    const newScale = Math.max(this.engine.transform.minScale, scale);
     
     // Si le scale a changé significativement, recentrer le canvas
     if (Math.abs(newScale - this.engine.transform.scale) > 0.01) {
