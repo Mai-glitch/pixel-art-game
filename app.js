@@ -57,7 +57,9 @@ class PixelArtApp {
       window.location.hash = '#home';
       return;
     }
-    const view = new EditorView(this.app, puzzleId);
+    // Decode URL-encoded puzzle ID (e.g., spaces become %20)
+    const decodedId = decodeURIComponent(puzzleId);
+    const view = new EditorView(this.app, decodedId);
     this.currentView = view;
     await view.mount();
   }
