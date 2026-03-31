@@ -687,6 +687,19 @@ export class EditorView {
   }
 
   showCompletionCelebration() {
+    // Créer le conteneur principal qui capture les clics
+    const overlay = document.createElement('div');
+    overlay.id = 'completion-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 998;
+      cursor: pointer;
+    `;
+    
     const celebration = document.createElement('div');
     celebration.style.cssText = `
       position: fixed;
@@ -701,6 +714,7 @@ export class EditorView {
       font-weight: bold;
       z-index: 1000;
       animation: celebrate 0.5s ease-out;
+      pointer-events: none;
     `;
     celebration.textContent = 'Bravo, vous avez terminé !';
     
@@ -725,41 +739,44 @@ export class EditorView {
     `;
     document.head.appendChild(style);
     document.body.appendChild(celebration);
+    document.body.appendChild(overlay);
     
-    this.createConfetti();
+    this.celebrationOverlay = overlay;
+    this.celebrationElement = celebration;
+    this.celebrationStyle = style;
     
-    setTimeout(() => {
-      celebration.remove();
-      style.remove();
-    }, 2000);
+    // Démarrer la pluie de confettis en continu
+    this.startConfettiRain();
+    
+    // Ajouter le gestionnaire de clic pour fermer
+    const closeCelebration = () => {
+      this.closeCompletionCelebration();
+    };
+    
+    overlay.addEventListener('click', closeCelebration);
   }
 
-  createConfetti() {
+  startConfettiRain() {
+    this.confettiInterval = setInterval(() => {
+      this.createConfettiBatch();
+    }, 500);
+  }
+
+  createConfettiBatch() {
     const colors = ['#ff6b35', '#f7931e', '#ffd23f', '#06ffa5', '#3a86ff', '#ff006e', '#8338ec'];
-    const confettiCount = 150;
+    const confettiCount = 20;
     
-    const container = document.createElement('div');
-    container.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 999;
-      overflow: hidden;
-    `;
+    if (!this.celebrationOverlay) return;
     
     for (let i = 0; i < confettiCount; i++) {
       const confetti = document.createElement('div');
       const color = colors[Math.floor(Math.random() * colors.length)];
       const left = Math.random() * 100;
-      const delay = Math.random() * 2;
-      const duration = 2 + Math.random() * 2;
+      const duration = 3 + Math.random() * 2;
       const size = 8 + Math.random() * 8;
       
       confetti.style.cssText = `
-        position: absolute;
+        position: fixed;
         width: ${size}px;
         height: ${size}px;
         background: ${color};
@@ -767,22 +784,50 @@ export class EditorView {
         top: -20px;
         border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
         transform: rotate(${Math.random() * 360}deg);
-        animation: confetti-fall ${duration}s ease-out ${delay}s forwards;
-        opacity: 0;
+        animation: confetti-fall ${duration}s ease-out forwards;
+        opacity: 1;
+        z-index: 999;
+        pointer-events: none;
       `;
       
-      container.appendChild(confetti);
+      document.body.appendChild(confetti);
+      
+      // Nettoyer après l'animation
+      setTimeout(() => {
+        confetti.remove();
+      }, duration * 1000);
+    }
+  }
+
+  closeCompletionCelebration() {
+    // Arrêter la pluie de confettis
+    if (this.confettiInterval) {
+      clearInterval(this.confettiInterval);
+      this.confettiInterval = null;
     }
     
-    document.body.appendChild(container);
+    // Supprimer les éléments
+    if (this.celebrationOverlay) {
+      this.celebrationOverlay.remove();
+      this.celebrationOverlay = null;
+    }
+    if (this.celebrationElement) {
+      this.celebrationElement.remove();
+      this.celebrationElement = null;
+    }
+    if (this.celebrationStyle) {
+      this.celebrationStyle.remove();
+      this.celebrationStyle = null;
+    }
     
-    // Nettoyer après l'animation
-    setTimeout(() => {
-      container.remove();
-    }, 5000);
+    // Supprimer tous les confettis restants
+    document.querySelectorAll('[style*="confetti-fall"]').forEach(el => el.remove());
   }
 
   destroy() {
+    // Fermer la célébration si ouverte
+    this.closeCompletionCelebration();
+    
     // Clean up global painting listeners
     this.detachGlobalPaintingListeners();
     
