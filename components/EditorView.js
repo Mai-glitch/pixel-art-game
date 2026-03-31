@@ -23,6 +23,11 @@ export class EditorView {
       centerX: 0,
       centerY: 0
     };
+
+    // New properties for continuous drawing
+    this.lastPointerId = undefined;
+    this.boundGlobalPointerMove = null;
+    this.boundGlobalPointerUp = null;
   }
 
   async mount() {
