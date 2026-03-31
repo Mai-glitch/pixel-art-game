@@ -128,14 +128,34 @@ export class PuzzleStorage {
   }
 
   async initDefaults() {
-    const existing = this.getAll();
-    if (existing.length === 0) {
-      try {
-        const defaults = await this.getDefaultPuzzles();
-        defaults.forEach(p => this.save(p));
-      } catch (error) {
-        console.error('Error initializing default puzzles:', error);
+    try {
+      const defaults = await this.getDefaultPuzzles();
+      const existing = this.getAll();
+
+      // Create map of existing puzzles by ID
+      const existingMap = new Map();
+      existing.forEach(p => existingMap.set(p.id, p));
+
+      // Track what's added
+      let added = 0;
+      let skipped = 0;
+
+      defaults.forEach(defaultPuzzle => {
+        if (existingMap.has(defaultPuzzle.id)) {
+          // Puzzle already exists - preserve user progress
+          skipped++;
+        } else {
+          // New puzzle - add it with empty progress
+          this.save(defaultPuzzle);
+          added++;
+        }
+      });
+
+      if (added > 0) {
+        console.log(`Added ${added} new puzzles, preserved ${skipped} existing puzzles`);
       }
+    } catch (error) {
+      console.error('Error initializing default puzzles:', error);
     }
   }
 }

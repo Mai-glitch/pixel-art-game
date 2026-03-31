@@ -114,48 +114,87 @@ function validatePuzzle(puzzle) {
 
 /**
  * Build all puzzles from images directory
+ * @param {Object} options - Build options
+ * @param {string} options.sourceDir - Source directory for images (default: IMAGES_DIR)
+ * @param {boolean} options.mergeWithExisting - Whether to merge with existing puzzles
+ * @param {Array} options.existingPuzzles - Existing puzzles to merge with
+ * @param {string} options.outputFile - Output file path (default: OUTPUT_FILE)
+ * @returns {Promise<Array>} Array of generated puzzles
  */
-async function buildPuzzles() {
+async function buildPuzzles(options = {}) {
+  const {
+    sourceDir = IMAGES_DIR,
+    mergeWithExisting = false,
+    existingPuzzles = null,
+    outputFile = OUTPUT_FILE
+  } = options;
+
   try {
     console.log('Building puzzles...\n');
 
+    // Load existing puzzles if in merge mode
+    let existingPuzzleMap = new Map();
+    if (mergeWithExisting && existingPuzzles) {
+      existingPuzzles.forEach(p => existingPuzzleMap.set(p.id, p));
+      console.log(`Loaded ${existingPuzzles.length} existing puzzles for merging`);
+    }
+
     // Read images directory
-    const files = fs.readdirSync(IMAGES_DIR);
+    const files = fs.readdirSync(sourceDir);
     const imageFiles = files.filter(file => {
       const ext = path.extname(file).toLowerCase();
       return VALID_EXTENSIONS.includes(ext);
     });
 
-    console.log(`Found ${imageFiles.length} images to process`);
+    console.log(`Found ${imageFiles.length} images to process in ${sourceDir}`);
 
     // Convert each image
-    const puzzles = [];
+    const newPuzzles = [];
     for (const filename of imageFiles) {
-      const imagePath = path.join(IMAGES_DIR, filename);
+      const imagePath = path.join(sourceDir, filename);
       try {
         const puzzle = await convertImageToPuzzle(imagePath);
+
+        // Check if puzzle already exists
+        if (existingPuzzleMap.has(puzzle.id)) {
+          console.log(`  ⊘ ${filename} -> ${puzzle.name} (already exists, skipping)`);
+          continue;
+        }
+
         validatePuzzle(puzzle);
-        puzzles.push(puzzle);
+        newPuzzles.push(puzzle);
         console.log(`  ✓ ${filename} -> ${puzzle.name} (${puzzle.palette.length} colors)`);
       } catch (err) {
         console.error(`  ✗ ${filename}: ${err.message}`);
       }
     }
 
-    console.log(`\nSuccessfully processed ${puzzles.length}/${imageFiles.length} images`);
+    // Prepare final puzzle list
+    let finalPuzzles;
+    if (mergeWithExisting) {
+      finalPuzzles = [...existingPuzzles, ...newPuzzles];
+      console.log(`\nSuccessfully processed ${newPuzzles.length}/${imageFiles.length} new images`);
+      console.log(`Total puzzles after merge: ${finalPuzzles.length}`);
+    } else {
+      finalPuzzles = newPuzzles;
+      console.log(`\nSuccessfully processed ${newPuzzles.length}/${imageFiles.length} images`);
+    }
 
     // Sort puzzles alphabetically by name
-    puzzles.sort((a, b) => a.name.localeCompare(b.name));
+    finalPuzzles.sort((a, b) => a.name.localeCompare(b.name));
 
     // Write output
-    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(puzzles, null, 2));
-    console.log(`\n✓ Output written to: ${OUTPUT_FILE}`);
+    fs.writeFileSync(outputFile, JSON.stringify(finalPuzzles, null, 2));
+    console.log(`\n✓ Output written to: ${outputFile}`);
 
     // Summary
     console.log('\nPuzzles generated:');
-    puzzles.forEach((p, i) => {
-      console.log(`  ${i + 1}. ${p.name} (${p.palette.length} colors)`);
+    finalPuzzles.forEach((p, i) => {
+      const isNew = newPuzzles.some(np => np.id === p.id);
+      console.log(`  ${i + 1}. ${p.name} (${p.palette.length} colors)${isNew ? ' [NEW]' : ''}`);
     });
+
+    return finalPuzzles;
 
   } catch (err) {
     console.error('\n✗ Build failed:', err.message);
@@ -165,7 +204,23 @@ async function buildPuzzles() {
 
 // Run if called directly
 if (require.main === module) {
-  buildPuzzles();
+  const args = process.argv.slice(2);
+  const mergeMode = args.includes('--merge');
+  const sourceIndex = args.indexOf('--source');
+  const sourceDir = sourceIndex >= 0 ? args[sourceIndex + 1] : null;
+
+  let existingPuzzles = null;
+  if (mergeMode && fs.existsSync(OUTPUT_FILE)) {
+    existingPuzzles = JSON.parse(fs.readFileSync(OUTPUT_FILE, 'utf8'));
+  }
+
+  const options = {
+    mergeWithExisting: mergeMode,
+    existingPuzzles,
+    ...(sourceDir && { sourceDir })
+  };
+
+  buildPuzzles(options);
 }
 
 module.exports = { buildPuzzles, convertImageToPuzzle };
