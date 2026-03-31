@@ -28,6 +28,9 @@ export class EditorView {
     this.lastPointerId = undefined;
     this.boundGlobalPointerMove = null;
     this.boundGlobalPointerUp = null;
+    
+    // Flag pour éviter les célébrations multiples
+    this.hasCelebrated = false;
   }
 
   async mount() {
@@ -658,8 +661,27 @@ export class EditorView {
   }
 
   checkCompletion() {
-    const percent = this.storage.calculatePercent(this.puzzle);
-    if (percent === 100) {
+    // Ne pas célébrer si déjà fait dans cette session
+    if (this.hasCelebrated) return;
+    
+    // Calculer le vrai compte de pixels (pas seulement le pourcentage)
+    let totalPixels = 0;
+    let paintedPixels = 0;
+    
+    for (let y = 0; y < this.puzzle.targetGrid.length; y++) {
+      for (let x = 0; x < this.puzzle.targetGrid[y].length; x++) {
+        if (this.puzzle.targetGrid[y][x] > 0) {
+          totalPixels++;
+          if (this.puzzle.paintedGrid[y]?.[x] === 1) {
+            paintedPixels++;
+          }
+        }
+      }
+    }
+    
+    // Ne célébrer que quand TOUS les pixels sont réellement peints
+    if (paintedPixels === totalPixels && totalPixels > 0) {
+      this.hasCelebrated = true;
       this.showCompletionCelebration();
     }
   }
@@ -680,7 +702,7 @@ export class EditorView {
       z-index: 1000;
       animation: celebrate 0.5s ease-out;
     `;
-    celebration.textContent = 'Complete!';
+    celebration.textContent = 'Bravo, vous avez terminé !';
     
     const style = document.createElement('style');
     style.textContent = `
@@ -689,14 +711,75 @@ export class EditorView {
         50% { transform: translate(-50%, -50%) scale(1.2); }
         100% { transform: translate(-50%, -50%) scale(1); }
       }
+      
+      @keyframes confetti-fall {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
     `;
     document.head.appendChild(style);
     document.body.appendChild(celebration);
+    
+    this.createConfetti();
     
     setTimeout(() => {
       celebration.remove();
       style.remove();
     }, 2000);
+  }
+
+  createConfetti() {
+    const colors = ['#ff6b35', '#f7931e', '#ffd23f', '#06ffa5', '#3a86ff', '#ff006e', '#8338ec'];
+    const confettiCount = 150;
+    
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+      overflow: hidden;
+    `;
+    
+    for (let i = 0; i < confettiCount; i++) {
+      const confetti = document.createElement('div');
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const left = Math.random() * 100;
+      const delay = Math.random() * 2;
+      const duration = 2 + Math.random() * 2;
+      const size = 8 + Math.random() * 8;
+      
+      confetti.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        background: ${color};
+        left: ${left}%;
+        top: -20px;
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+        transform: rotate(${Math.random() * 360}deg);
+        animation: confetti-fall ${duration}s ease-out ${delay}s forwards;
+        opacity: 0;
+      `;
+      
+      container.appendChild(confetti);
+    }
+    
+    document.body.appendChild(container);
+    
+    // Nettoyer après l'animation
+    setTimeout(() => {
+      container.remove();
+    }, 5000);
   }
 
   destroy() {
