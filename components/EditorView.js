@@ -640,29 +640,62 @@ export class EditorView {
   }
 
   paintAt(x, y) {
-    const gridPos = this.engine.screenToGrid(x, y);
-
+    const currentPos = this.engine.screenToGrid(x, y);
+    
     // Check bounds
-    if (gridPos.x < 0 || gridPos.x >= 32 || gridPos.y < 0 || gridPos.y >= 32) return;
-
-    if (this.selectedColor === this.ERASER_INDEX) {
-      // Eraser mode: clear painted pixels
-      if (this.puzzle.paintedGrid[gridPos.y]?.[gridPos.x] === 1) {
-        this.puzzle.paintedGrid[gridPos.y][gridPos.x] = 0;
-        // Reset celebration flag so user can celebrate again after re-painting
-        this.hasCelebrated = false;
-        this.storage.saveProgress(this.puzzleId, this.puzzle.paintedGrid);
-        this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
-        this.updateProgress();
-      }
+    if (currentPos.x < 0 || currentPos.x >= 32 || currentPos.y < 0 || currentPos.y >= 32) {
+      // Still update lastPaintedPos even if outside bounds so we can paint back in
+      return;
+    }
+    
+    // Determine which pixels to paint
+    let pixelsToPaint = [];
+    
+    if (this.lastPaintedPos && 
+        (this.lastPaintedPos.x !== currentPos.x || this.lastPaintedPos.y !== currentPos.y)) {
+      // Interpolate line between last position and current position
+      pixelsToPaint = this.getLinePixels(
+        this.lastPaintedPos.x,
+        this.lastPaintedPos.y,
+        currentPos.x,
+        currentPos.y
+      );
     } else {
-      // Normal painting mode
-      if (this.engine.paintPixel(gridPos.x, gridPos.y, this.selectedColor, this.puzzle.targetGrid)) {
-        this.puzzle.paintedGrid[gridPos.y][gridPos.x] = 1;
-        this.storage.saveProgress(this.puzzleId, this.puzzle.paintedGrid);
-        this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
-        this.updateProgress();
+      // First paint or same position - just paint current
+      pixelsToPaint = [currentPos];
+    }
+    
+    // Update last painted position
+    this.lastPaintedPos = { ...currentPos };
+    
+    // Filter out positions already painted or not matching color
+    let hasChanged = false;
+    
+    for (const pos of pixelsToPaint) {
+      // Skip if out of bounds
+      if (pos.x < 0 || pos.x >= 32 || pos.y < 0 || pos.y >= 32) continue;
+      
+      if (this.selectedColor === this.ERASER_INDEX) {
+        // Eraser mode: clear painted pixels
+        if (this.puzzle.paintedGrid[pos.y]?.[pos.x] === 1) {
+          this.puzzle.paintedGrid[pos.y][pos.x] = 0;
+          this.hasCelebrated = false;
+          hasChanged = true;
+        }
+      } else {
+        // Normal painting mode
+        if (this.engine.paintPixel(pos.x, pos.y, this.selectedColor, this.puzzle.targetGrid)) {
+          this.puzzle.paintedGrid[pos.y][pos.x] = 1;
+          hasChanged = true;
+        }
       }
+    }
+    
+    // Only save and render if something changed
+    if (hasChanged) {
+      this.storage.saveProgress(this.puzzleId, this.puzzle.paintedGrid);
+      this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+      this.updateProgress();
     }
   }
 
