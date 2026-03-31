@@ -1,10 +1,18 @@
 export class CanvasEngine {
-  constructor(canvas) {
+  constructor(canvas, width = 32, height = 32) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.baseSize = 512;
-    this.gridSize = 32;
-    this.pixelSize = this.baseSize / this.gridSize;
+    this.gridWidth = width;
+    this.gridHeight = height;
+    
+    // Calculate pixelSize based on max dimension to maintain square pixels
+    const maxDimension = Math.max(this.gridWidth, this.gridHeight);
+    this.pixelSize = this.baseSize / maxDimension;
+    
+    // Calculate actual canvas dimensions
+    this.canvasWidth = this.pixelSize * this.gridWidth;
+    this.canvasHeight = this.pixelSize * this.gridHeight;
 
     this.transform = {
       scale: 1.0,
@@ -18,19 +26,26 @@ export class CanvasEngine {
   }
 
   setupCanvas() {
-    this.canvas.width = this.baseSize;
-    this.canvas.height = this.baseSize;
+    this.canvas.width = this.canvasWidth;
+    this.canvas.height = this.canvasHeight;
     this.canvas.style.width = '100%';
     this.canvas.style.height = 'auto';
-    this.canvas.style.maxWidth = '512px';
+    this.canvas.style.maxWidth = `${this.canvasWidth}px`;
   }
 
-  resize(newSize) {
-    this.baseSize = newSize;
-    this.pixelSize = this.baseSize / this.gridSize;
-    this.canvas.width = this.baseSize;
-    this.canvas.height = this.baseSize;
-    this.canvas.style.maxWidth = `${newSize}px`;
+  resize(newSize, newWidth = null, newHeight = null) {
+    if (newWidth !== null) this.gridWidth = newWidth;
+    if (newHeight !== null) this.gridHeight = newHeight;
+    
+    const maxDimension = Math.max(this.gridWidth, this.gridHeight);
+    this.pixelSize = newSize / maxDimension;
+    
+    this.canvasWidth = this.pixelSize * this.gridWidth;
+    this.canvasHeight = this.pixelSize * this.gridHeight;
+    
+    this.canvas.width = this.canvasWidth;
+    this.canvas.height = this.canvasHeight;
+    this.canvas.style.maxWidth = `${this.canvasWidth}px`;
   }
 
   resetView() {
@@ -40,7 +55,6 @@ export class CanvasEngine {
   }
 
   centerCanvas() {
-    // Reset offsets to center the canvas in the viewport
     this.transform.offsetX = 0;
     this.transform.offsetY = 0;
     this.constrainPan();
@@ -54,8 +68,7 @@ export class CanvasEngine {
 
     if (newScale !== this.transform.scale) {
       const scaleRatio = newScale / this.transform.scale;
-      const rect = this.canvas.getBoundingClientRect();
-
+      
       this.transform.offsetX = centerX - (centerX - this.transform.offsetX) * scaleRatio;
       this.transform.offsetY = centerY - (centerY - this.transform.offsetY) * scaleRatio;
       this.transform.scale = newScale;
@@ -71,26 +84,24 @@ export class CanvasEngine {
   }
 
   constrainPan() {
-    const scaledSize = this.baseSize * this.transform.scale;
+    const scaledWidth = this.canvasWidth * this.transform.scale;
+    const scaledHeight = this.canvasHeight * this.transform.scale;
+    const rect = this.canvas.getBoundingClientRect();
     
-    // If canvas is smaller than or equal to viewport, center it
-    if (scaledSize <= this.canvas.width) {
+    if (scaledWidth <= rect.width) {
       this.transform.offsetX = 0;
     } else {
-      // Prevent showing empty space on left/right
-      // offsetX <= 0 (can't push content right, which would show empty left side)
-      // offsetX >= canvas.width - scaledSize (can't push content left past right edge)
       this.transform.offsetX = Math.max(
-        this.canvas.width - scaledSize, // negative or zero
+        rect.width - scaledWidth,
         Math.min(0, this.transform.offsetX)
       );
     }
     
-    if (scaledSize <= this.canvas.height) {
+    if (scaledHeight <= rect.height) {
       this.transform.offsetY = 0;
     } else {
       this.transform.offsetY = Math.max(
-        this.canvas.height - scaledSize,
+        rect.height - scaledHeight,
         Math.min(0, this.transform.offsetY)
       );
     }
@@ -101,8 +112,6 @@ export class CanvasEngine {
     const scaleX = this.canvas.width / rect.width;
     const scaleY = this.canvas.height / rect.height;
 
-    // screenX and screenY are already relative to the canvas (local coordinates)
-    // Convert to canvas pixels then to grid coordinates
     const x = screenX * scaleX;
     const y = screenY * scaleY;
 
@@ -140,8 +149,8 @@ export class CanvasEngine {
   }
 
   drawGrid(targetGrid, paintedGrid, palette, renderMode = 'editor') {
-    for (let y = 0; y < this.gridSize; y++) {
-      for (let x = 0; x < this.gridSize; x++) {
+    for (let y = 0; y < this.gridHeight; y++) {
+      for (let x = 0; x < this.gridWidth; x++) {
         const targetColor = targetGrid[y]?.[x] || 0;
         const isPainted = paintedGrid[y]?.[x] === 1;
 
@@ -183,7 +192,7 @@ export class CanvasEngine {
   }
 
   paintPixel(x, y, colorIndex, targetGrid) {
-    if (x < 0 || x >= this.gridSize || y < 0 || y >= this.gridSize) return false;
+    if (x < 0 || x >= this.gridWidth || y < 0 || y >= this.gridHeight) return false;
     if (targetGrid[y]?.[x] !== colorIndex) return false;
     return true;
   }
@@ -194,10 +203,12 @@ export class CanvasEngine {
     thumbCanvas.height = 64;
     const thumbCtx = thumbCanvas.getContext('2d');
 
-    const thumbPixelSize = 64 / this.gridSize;
+    // For thumbnails, use a fixed size and adapt the image
+    const maxGridDimension = Math.max(this.gridWidth, this.gridHeight);
+    const thumbPixelSize = 64 / maxGridDimension;
 
-    for (let y = 0; y < this.gridSize; y++) {
-      for (let x = 0; x < this.gridSize; x++) {
+    for (let y = 0; y < this.gridHeight; y++) {
+      for (let x = 0; x < this.gridWidth; x++) {
         const colorIndex = targetGrid[y]?.[x] || 0;
         if (colorIndex > 0) {
           thumbCtx.fillStyle = palette[colorIndex - 1];
