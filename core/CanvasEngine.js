@@ -18,7 +18,7 @@ export class CanvasEngine {
       scale: 1.0,
       offsetX: 0,
       offsetY: 0,
-      minScale: 1.0,
+      minScale: 0.25,
       maxScale: 5.0
     };
 
