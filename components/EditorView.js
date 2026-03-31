@@ -9,6 +9,7 @@ export class EditorView {
     this.puzzle = null;
     this.engine = null;
     this.selectedColor = 1;
+    this.ERASER_INDEX = 0; // 0 means eraser mode
     this.element = null;
     this.canvas = null;
     this.isPainting = false;
@@ -377,6 +378,51 @@ export class EditorView {
     palette.style.cssText = `
       background: var(--bg-card);
     `;
+    
+    // Add eraser button first
+    const isEraserSelected = this.selectedColor === this.ERASER_INDEX;
+    const eraserBtn = document.createElement('button');
+    eraserBtn.style.cssText = `
+      width: 36px;
+      height: 36px;
+      border: ${isEraserSelected ? '3px solid #ff6b35' : '2px solid rgba(255,255,255,0.3)'};
+      border-radius: 6px;
+      background: #2a2a3e;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transform: ${isEraserSelected ? 'scale(1.15)' : 'scale(1)'};
+      box-shadow: ${isEraserSelected ? '0 0 8px rgba(255, 107, 53, 0.6)' : 'none'};
+      z-index: ${isEraserSelected ? '10' : '1'};
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    
+    const eraserIcon = document.createElement('span');
+    eraserIcon.innerHTML = '🧼';
+    eraserIcon.style.cssText = 'font-size: 18px;';
+    
+    const eraserLabel = document.createElement('span');
+    eraserLabel.textContent = 'G';
+    eraserLabel.style.cssText = `
+      position: absolute;
+      bottom: 2px;
+      right: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      color: #888;
+    `;
+    
+    eraserBtn.appendChild(eraserIcon);
+    eraserBtn.appendChild(eraserLabel);
+    eraserBtn.addEventListener('click', () => {
+      this.selectedColor = this.ERASER_INDEX;
+      this.renderPalette();
+    });
+    
+    palette.appendChild(eraserBtn);
     
     this.puzzle.palette.forEach((color, index) => {
       const isSelected = index + 1 === this.selectedColor;
