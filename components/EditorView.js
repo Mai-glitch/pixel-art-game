@@ -155,14 +155,24 @@ export class EditorView {
     zoomOutBtn.innerHTML = '−';
     zoomOutBtn.style.cssText = this.getZoomButtonStyle();
     zoomOutBtn.addEventListener('click', () => {
-      if (this.engine) this.zoom(-0.1);
+      if (this.engine) {
+        const newScale = this.engine.transform.scale - 0.1;
+        if (newScale >= this.engine.transform.minScale) {
+          this.zoom(-0.1);
+        }
+      }
     });
     
     const zoomInBtn = document.createElement('button');
     zoomInBtn.innerHTML = '+';
     zoomInBtn.style.cssText = this.getZoomButtonStyle();
     zoomInBtn.addEventListener('click', () => {
-      if (this.engine) this.zoom(0.1);
+      if (this.engine) {
+        const newScale = this.engine.transform.scale + 0.1;
+        if (newScale <= this.engine.transform.maxScale) {
+          this.zoom(0.1);
+        }
+      }
     });
     
     const zoomLabel = document.createElement('span');
@@ -581,6 +591,7 @@ export class EditorView {
       const delta = e.deltaY > 0 ? -0.2 : 0.2;
 
       this.engine.zoom(delta, x, y);
+      this.updateZoomLabel();
       this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
     }, { passive: false });
 
