@@ -64,20 +64,20 @@ test.describe('Variable Puzzle Dimensions', () => {
   });
 });
 
-test.describe('ImageConverter variable dimensions', () => {
-  test('ImageConverter should convert image to custom rectangular size (16x24)', async ({ page }) => {
+test.describe('ImageConverter auto-resize with ratio preservation', () => {
+  test('ImageConverter should resize wide image to max 100x100 preserving ratio', async ({ page }) => {
     await page.goto('http://localhost:8080');
     await page.waitForSelector('#home-view', { timeout: 5000 });
     
     const result = await page.evaluate(async () => {
-      const converter = new (window as any).ImageConverter(16, 24);
+      const converter = new (window as any).ImageConverter(100);
       
       const testCanvas = document.createElement('canvas');
-      testCanvas.width = 16;
-      testCanvas.height = 24;
+      testCanvas.width = 200;
+      testCanvas.height = 100;
       const ctx = testCanvas.getContext('2d');
       ctx.fillStyle = 'red';
-      ctx.fillRect(0, 0, 16, 24);
+      ctx.fillRect(0, 0, 200, 100);
       
       const blob = await new Promise<Blob>((resolve) => {
         testCanvas.toBlob((b) => resolve(b!), 'image/png');
@@ -92,23 +92,89 @@ test.describe('ImageConverter variable dimensions', () => {
       };
     });
     
-    expect(result.gridHeight).toBe(24);
-    expect(result.gridWidth).toBe(16);
+    expect(result.gridWidth).toBe(100);
+    expect(result.gridHeight).toBe(50);
   });
   
-  test('ImageConverter should default to 32x32', async ({ page }) => {
+  test('ImageConverter should resize tall image to max 100x100 preserving ratio', async ({ page }) => {
     await page.goto('http://localhost:8080');
     await page.waitForSelector('#home-view', { timeout: 5000 });
     
-    const converter = await page.evaluate(() => {
-      const c = new (window as any).ImageConverter();
+    const result = await page.evaluate(async () => {
+      const converter = new (window as any).ImageConverter(100);
+      
+      const testCanvas = document.createElement('canvas');
+      testCanvas.width = 100;
+      testCanvas.height = 200;
+      const ctx = testCanvas.getContext('2d');
+      ctx.fillStyle = 'red';
+      ctx.fillRect(0, 0, 100, 200);
+      
+      const blob = await new Promise<Blob>((resolve) => {
+        testCanvas.toBlob((b) => resolve(b!), 'image/png');
+      });
+      
+      const file = new File([blob], 'test.png', { type: 'image/png' });
+      const puzzle = await converter.convertImage(file, 'Test Puzzle');
+      
       return {
-        gridWidth: c.gridWidth,
-        gridHeight: c.gridHeight
+        gridHeight: puzzle.targetGrid.length,
+        gridWidth: puzzle.targetGrid[0].length
       };
     });
     
-    expect(converter.gridWidth).toBe(32);
-    expect(converter.gridHeight).toBe(32);
+    expect(result.gridWidth).toBe(50);
+    expect(result.gridHeight).toBe(100);
+  });
+  
+  test('ImageConverter should keep original size if smaller than max', async ({ page }) => {
+    await page.goto('http://localhost:8080');
+    await page.waitForSelector('#home-view', { timeout: 5000 });
+    
+    const result = await page.evaluate(async () => {
+      const converter = new (window as any).ImageConverter(100);
+      
+      const testCanvas = document.createElement('canvas');
+      testCanvas.width = 50;
+      testCanvas.height = 30;
+      const ctx = testCanvas.getContext('2d');
+      ctx.fillStyle = 'red';
+      ctx.fillRect(0, 0, 50, 30);
+      
+      const blob = await new Promise<Blob>((resolve) => {
+        testCanvas.toBlob((b) => resolve(b!), 'image/png');
+      });
+      
+      const file = new File([blob], 'test.png', { type: 'image/png' });
+      const puzzle = await converter.convertImage(file, 'Test Puzzle');
+      
+      return {
+        gridHeight: puzzle.targetGrid.length,
+        gridWidth: puzzle.targetGrid[0].length
+      };
+    });
+    
+    expect(result.gridWidth).toBe(50);
+    expect(result.gridHeight).toBe(30);
+  });
+  
+  test('ImageConverter should calculate dimensions correctly', async ({ page }) => {
+    await page.goto('http://localhost:8080');
+    await page.waitForSelector('#home-view', { timeout: 5000 });
+    
+    const dimensions = await page.evaluate(() => {
+      const converter = new (window as any).ImageConverter(100);
+      return {
+        wide: converter.calculateDimensions(200, 100),
+        tall: converter.calculateDimensions(100, 200),
+        small: converter.calculateDimensions(50, 30),
+        square: converter.calculateDimensions(150, 150)
+      };
+    });
+    
+    expect(dimensions.wide).toEqual({ width: 100, height: 50 });
+    expect(dimensions.tall).toEqual({ width: 50, height: 100 });
+    expect(dimensions.small).toEqual({ width: 50, height: 30 });
+    expect(dimensions.square).toEqual({ width: 100, height: 100 });
   });
 });

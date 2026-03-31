@@ -4,7 +4,7 @@ import { PuzzleStorage } from '../core/PuzzleStorage.js';
 export class ImportModal {
   constructor(container) {
     this.container = container;
-    this.converter = new ImageConverter();
+    this.converter = new ImageConverter(100);
     this.storage = new PuzzleStorage();
     this.element = null;
     this.selectedFile = null;
@@ -68,75 +68,6 @@ export class ImportModal {
       text-align: center;
     `;
     
-    const dimensionsContainer = document.createElement('div');
-    dimensionsContainer.style.cssText = `
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 24px;
-    `;
-    
-    const widthContainer = document.createElement('div');
-    const widthLabel = document.createElement('label');
-    widthLabel.textContent = 'Largeur:';
-    widthLabel.style.cssText = 'color: white; font-size: 14px; display: block; margin-bottom: 4px;';
-    
-    const widthSelect = document.createElement('select');
-    widthSelect.id = 'grid-width';
-    widthSelect.style.cssText = `
-      padding: 8px;
-      border-radius: 6px;
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.3);
-      width: 100%;
-    `;
-    
-    const heightContainer = document.createElement('div');
-    const heightLabel = document.createElement('label');
-    heightLabel.textContent = 'Hauteur:';
-    heightLabel.style.cssText = 'color: white; font-size: 14px; display: block; margin-bottom: 4px;';
-    
-    const heightSelect = document.createElement('select');
-    heightSelect.id = 'grid-height';
-    heightSelect.style.cssText = widthSelect.style.cssText;
-    
-    const sizes = [
-      { value: '8', label: '8' },
-      { value: '12', label: '12' },
-      { value: '16', label: '16' },
-      { value: '20', label: '20' },
-      { value: '24', label: '24' },
-      { value: '32', label: '32 (Standard)' },
-      { value: '40', label: '40' },
-      { value: '48', label: '48' },
-      { value: '64', label: '64' }
-    ];
-    
-    sizes.forEach(size => {
-      const widthOption = document.createElement('option');
-      widthOption.value = size.value;
-      widthOption.textContent = size.label;
-      widthOption.style.color = 'black';
-      if (size.value === '32') widthOption.selected = true;
-      widthSelect.appendChild(widthOption);
-      
-      const heightOption = document.createElement('option');
-      heightOption.value = size.value;
-      heightOption.textContent = size.label;
-      heightOption.style.color = 'black';
-      if (size.value === '32') heightOption.selected = true;
-      heightSelect.appendChild(heightOption);
-    });
-    
-    widthContainer.appendChild(widthLabel);
-    widthContainer.appendChild(widthSelect);
-    heightContainer.appendChild(heightLabel);
-    heightContainer.appendChild(heightSelect);
-    
-    dimensionsContainer.appendChild(widthContainer);
-    dimensionsContainer.appendChild(heightContainer);
-    
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.placeholder = 'Puzzle name (optional)';
@@ -194,7 +125,6 @@ export class ImportModal {
     modal.appendChild(title);
     modal.appendChild(fileInput);
     modal.appendChild(preview);
-    modal.appendChild(dimensionsContainer);
     modal.appendChild(nameInput);
     modal.appendChild(buttons);
     
@@ -249,14 +179,8 @@ export class ImportModal {
     importBtn.disabled = true;
     importBtn.textContent = 'Processing...';
     
-    const widthSelect = this.element.querySelector('#grid-width');
-    const heightSelect = this.element.querySelector('#grid-height');
-    const gridWidth = parseInt(widthSelect?.value || '32', 10);
-    const gridHeight = parseInt(heightSelect?.value || '32', 10);
-    
     try {
-      const converter = new ImageConverter(gridWidth, gridHeight);
-      const puzzle = await converter.convertImage(this.selectedFile, name || this.selectedFile.name);
+      const puzzle = await this.converter.convertImage(this.selectedFile, name || this.selectedFile.name);
       this.storage.save(puzzle);
       window.location.hash = `#editor/${puzzle.id}`;
       this.close();

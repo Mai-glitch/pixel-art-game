@@ -1,8 +1,27 @@
 export class ImageConverter {
-  constructor(width = 32, height = 32) {
+  constructor(maxSize = 100) {
     this.maxColors = 8;
-    this.gridWidth = width;
-    this.gridHeight = height;
+    this.MAX_SIZE = maxSize;
+  }
+
+  calculateDimensions(imgWidth, imgHeight) {
+    const ratio = imgWidth / imgHeight;
+    
+    if (imgWidth <= this.MAX_SIZE && imgHeight <= this.MAX_SIZE) {
+      return { width: imgWidth, height: imgHeight };
+    }
+    
+    if (ratio > 1) {
+      return {
+        width: this.MAX_SIZE,
+        height: Math.round(this.MAX_SIZE / ratio)
+      };
+    } else {
+      return {
+        width: Math.round(this.MAX_SIZE * ratio),
+        height: this.MAX_SIZE
+      };
+    }
   }
 
   async convertImage(file, name) {
@@ -10,31 +29,14 @@ export class ImageConverter {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
+    const dimensions = this.calculateDimensions(image.width, image.height);
+    this.gridWidth = dimensions.width;
+    this.gridHeight = dimensions.height;
+    
     canvas.width = this.gridWidth;
     canvas.height = this.gridHeight;
     
-    // Resize image preserving aspect ratio
-    const imageRatio = image.width / image.height;
-    const targetRatio = this.gridWidth / this.gridHeight;
-    
-    let drawWidth, drawHeight, offsetX, offsetY;
-    
-    if (imageRatio > targetRatio) {
-      // Image wider than target
-      drawWidth = this.gridHeight * imageRatio;
-      drawHeight = this.gridHeight;
-      offsetX = (this.gridWidth - drawWidth) / 2;
-      offsetY = 0;
-    } else {
-      // Image taller than target
-      drawWidth = this.gridWidth;
-      drawHeight = this.gridWidth / imageRatio;
-      offsetX = 0;
-      offsetY = (this.gridHeight - drawHeight) / 2;
-    }
-    
-    // Center and draw image
-    ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+    ctx.drawImage(image, 0, 0, this.gridWidth, this.gridHeight);
     
     const imageData = ctx.getImageData(0, 0, this.gridWidth, this.gridHeight);
     const pixels = this.extractPixels(imageData);
