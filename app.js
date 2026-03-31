@@ -2,6 +2,8 @@ import { HomeView } from './components/HomeView.js';
 import { EditorView } from './components/EditorView.js';
 import { ImportModal } from './components/ImportModal.js';
 import { PuzzleStorage } from './core/PuzzleStorage.js';
+import { CanvasEngine } from './core/CanvasEngine.js';
+import { ImageConverter } from './core/ImageConverter.js';
 
 class PixelArtApp {
   constructor() {
@@ -68,3 +70,9 @@ class PixelArtApp {
 }
 
 new PixelArtApp();
+
+// Expose classes for testing
+if (typeof window !== 'undefined') {
+  window.CanvasEngine = CanvasEngine;
+  window.ImageConverter = ImageConverter;
+}
