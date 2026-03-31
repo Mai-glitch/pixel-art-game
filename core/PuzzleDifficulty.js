@@ -11,8 +11,7 @@ export function calculateDifficulty(targetGrid, palette) {
   const colorScore = colors / 10;
   const pixelScore = pixels / 1000;
   
-  const rawDifficulty = ((colorScore + pixelScore) / 2) * 5;
+  const rawDifficulty = ((colorScore + pixelScore) / 2) * 5 / 2;
   
-  // Use floor to ensure basketball (32x32, 5 colors) = 3 stars
   return Math.max(1, Math.min(5, Math.floor(rawDifficulty)));
 }
