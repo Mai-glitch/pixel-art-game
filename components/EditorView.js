@@ -32,6 +32,9 @@ export class EditorView {
     
     // Flag pour éviter les célébrations multiples
     this.hasCelebrated = false;
+    
+    // Track last painted position for interpolation
+    this.lastPaintedPos = null;
   }
 
   async mount() {
@@ -711,6 +714,7 @@ export class EditorView {
     if (!this.isPainting) return;
     
     this.isPainting = false;
+    this.lastPaintedPos = null;
     this.canvas.style.cursor = 'crosshair';
     
     // Release pointer capture
