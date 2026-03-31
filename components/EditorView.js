@@ -318,7 +318,9 @@ export class EditorView {
     canvasContainer.appendChild(this.canvas);
     this.element.appendChild(canvasContainer);
 
-    this.engine = new CanvasEngine(this.canvas);
+    const gridHeight = this.puzzle.targetGrid?.length || 32;
+    const gridWidth = this.puzzle.targetGrid?.[0]?.length || 32;
+    this.engine = new CanvasEngine(this.canvas, gridWidth, gridHeight);
 
     // Auto-fit to container on load
     setTimeout(() => {
@@ -641,9 +643,11 @@ export class EditorView {
 
   paintAt(x, y) {
     const currentPos = this.engine.screenToGrid(x, y);
+    const gridWidth = this.puzzle.targetGrid[0].length;
+    const gridHeight = this.puzzle.targetGrid.length;
     
     // Check bounds
-    if (currentPos.x < 0 || currentPos.x >= 32 || currentPos.y < 0 || currentPos.y >= 32) {
+    if (currentPos.x < 0 || currentPos.x >= gridWidth || currentPos.y < 0 || currentPos.y >= gridHeight) {
       // Skip painting if outside bounds, lastPaintedPos will remain unchanged
       return;
     }
@@ -673,7 +677,7 @@ export class EditorView {
     
     for (const pos of pixelsToPaint) {
       // Skip if out of bounds
-      if (pos.x < 0 || pos.x >= 32 || pos.y < 0 || pos.y >= 32) continue;
+      if (pos.x < 0 || pos.x >= gridWidth || pos.y < 0 || pos.y >= gridHeight) continue;
       
       if (this.selectedColor === this.ERASER_INDEX) {
         // Eraser mode: clear painted pixels
