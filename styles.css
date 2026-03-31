@@ -74,12 +74,21 @@ body {
     margin-right: 24px;
   }
   
+  #editor-view .canvas-container {
+    margin-right: 24px;
+    flex: 1;
+    align-items: flex-start;
+  }
+  
   .palette {
     max-width: 280px;
     justify-content: flex-start;
     padding: 12px;
-    align-self: flex-start;
+    align-self: stretch;
     margin-top: 0;
+    margin-left: 0;
+    height: auto;
+    align-content: flex-start;
   }
   
   .palette button {
@@ -102,16 +111,19 @@ body {
   padding: 12px;
   justify-content: center;
   flex-wrap: wrap;
-  margin: 12px auto 0;
+  margin: 12px 0 0 0;
   border-radius: 8px;
-  /* Mobile: pas de limite de largeur */
+  /* Mobile: meme largeur que le canvas */
   max-width: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Desktop: max 4 couleurs par ligne */
 @media (min-width: 1024px) {
   .palette {
     max-width: 168px;
+    margin-top: 0 !important;
   }
 }
 
