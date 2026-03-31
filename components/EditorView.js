@@ -666,6 +666,45 @@ export class EditorView {
     }
   }
 
+  /**
+   * Get all grid coordinates along a line between two points using Bresenham's algorithm
+   * @param {number} x0 - Starting X coordinate
+   * @param {number} y0 - Starting Y coordinate
+   * @param {number} x1 - Ending X coordinate
+   * @param {number} y1 - Ending Y coordinate
+   * @returns {Array<{x: number, y: number}>} Array of grid coordinates
+   */
+  getLinePixels(x0, y0, x1, y1) {
+    const pixels = [];
+
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+
+    let x = x0;
+    let y = y0;
+
+    while (true) {
+      pixels.push({ x, y });
+
+      if (x === x1 && y === y1) break;
+
+      const e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
+      }
+    }
+
+    return pixels;
+  }
+
   attachGlobalPaintingListeners() {
     // Remove any existing global listeners first
     this.detachGlobalPaintingListeners();
