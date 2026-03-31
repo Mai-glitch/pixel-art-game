@@ -227,7 +227,7 @@ export class EditorView {
     this.updateZoomControls();
     
     if (this.canvas) {
-      this.canvas.style.cursor = mode === 'draw' ? 'crosshair' : 'grab';
+      this.updateCursor();
     }
   }
 
@@ -420,6 +420,7 @@ export class EditorView {
     eraserBtn.addEventListener('click', () => {
       this.selectedColor = this.ERASER_INDEX;
       this.renderPalette();
+      this.updateCursor();
     });
     
     palette.appendChild(eraserBtn);
@@ -458,6 +459,7 @@ export class EditorView {
       btn.addEventListener('click', () => {
         this.selectedColor = index + 1;
         this.renderPalette();
+        this.updateCursor();
       });
       
       palette.appendChild(btn);
@@ -472,6 +474,20 @@ export class EditorView {
     const b = parseInt(hex.slice(5, 7), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5 ? '#000000' : '#ffffff';
+  }
+
+  updateCursor() {
+    if (!this.canvas) return;
+
+    if (this.currentMode === 'draw') {
+      if (this.selectedColor === this.ERASER_INDEX) {
+        this.canvas.style.cursor = 'cell'; // Different cursor for eraser
+      } else {
+        this.canvas.style.cursor = 'crosshair';
+      }
+    } else {
+      this.canvas.style.cursor = 'grab';
+    }
   }
 
   setupEventListeners() {
@@ -622,12 +638,28 @@ export class EditorView {
 
   paintAt(x, y) {
     const gridPos = this.engine.screenToGrid(x, y);
-    
-    if (this.engine.paintPixel(gridPos.x, gridPos.y, this.selectedColor, this.puzzle.targetGrid)) {
-      this.puzzle.paintedGrid[gridPos.y][gridPos.x] = 1;
-      this.storage.saveProgress(this.puzzleId, this.puzzle.paintedGrid);
-      this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
-      this.updateProgress();
+
+    // Check bounds
+    if (gridPos.x < 0 || gridPos.x >= 32 || gridPos.y < 0 || gridPos.y >= 32) return;
+
+    if (this.selectedColor === this.ERASER_INDEX) {
+      // Eraser mode: clear painted pixels
+      if (this.puzzle.paintedGrid[gridPos.y]?.[gridPos.x] === 1) {
+        this.puzzle.paintedGrid[gridPos.y][gridPos.x] = 0;
+        // Reset celebration flag so user can celebrate again after re-painting
+        this.hasCelebrated = false;
+        this.storage.saveProgress(this.puzzleId, this.puzzle.paintedGrid);
+        this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+        this.updateProgress();
+      }
+    } else {
+      // Normal painting mode
+      if (this.engine.paintPixel(gridPos.x, gridPos.y, this.selectedColor, this.puzzle.targetGrid)) {
+        this.puzzle.paintedGrid[gridPos.y][gridPos.x] = 1;
+        this.storage.saveProgress(this.puzzleId, this.puzzle.paintedGrid);
+        this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
+        this.updateProgress();
+      }
     }
   }
 
