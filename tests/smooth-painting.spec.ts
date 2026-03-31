@@ -65,8 +65,7 @@ test.describe('Smooth Painting with Line Interpolation', () => {
     const progressText = await page.locator('header span:text-matches("[0-9]+%")').first().textContent();
     const percent = parseInt(progressText || '0');
     
-    // Should have painted at least 15 out of 22 pixels in the row
-    // (approximately 70% of the line segment)
+    // Should have at least 15% completion
     expect(percent).toBeGreaterThan(15);
     
     // Take screenshot for verification
@@ -128,7 +127,7 @@ test.describe('Smooth Painting with Line Interpolation', () => {
     const progressText = await page.locator('header span:text-matches("[0-9]+%")').first().textContent();
     const percent = parseInt(progressText || '0');
     
-    // Should have painted at least 50% of the diagonal
+    // Should have at least 10% completion
     expect(percent).toBeGreaterThan(10);
   });
 });
