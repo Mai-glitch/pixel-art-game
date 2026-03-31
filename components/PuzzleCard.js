@@ -1,4 +1,5 @@
 import { CanvasEngine } from '../core/CanvasEngine.js';
+import { calculateDifficulty } from '../core/PuzzleDifficulty.js';
 
 export class PuzzleCard {
   constructor(puzzle, onClick) {
@@ -51,6 +52,9 @@ export class PuzzleCard {
       gap: 4px;
     `;
     
+    // Calculate difficulty
+    const difficultyRating = calculateDifficulty(this.puzzle.targetGrid, this.puzzle.palette);
+    
     const name = document.createElement('h3');
     name.textContent = this.puzzle.name;
     name.style.cssText = `
@@ -58,6 +62,16 @@ export class PuzzleCard {
       font-weight: 600;
       margin: 0;
     `;
+    
+    // Add difficulty stars
+    const difficulty = document.createElement('div');
+    difficulty.style.cssText = `
+      font-size: 14px;
+      color: #FFD700;
+      letter-spacing: 2px;
+      margin-top: 2px;
+    `;
+    difficulty.textContent = '★'.repeat(difficultyRating) + '☆'.repeat(5 - difficultyRating);
     
     const progress = document.createElement('div');
     progress.style.cssText = `
@@ -92,6 +106,7 @@ export class PuzzleCard {
     progress.appendChild(progressBar);
     progress.appendChild(progressText);
     info.appendChild(name);
+    info.appendChild(difficulty);
     info.appendChild(progress);
     
     card.appendChild(canvas);
