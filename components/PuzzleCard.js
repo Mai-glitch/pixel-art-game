@@ -38,7 +38,9 @@ export class PuzzleCard {
       image-rendering: pixelated;
     `;
     
-    const engine = new CanvasEngine(canvas);
+    const gridHeight = this.puzzle.targetGrid?.length || 32;
+    const gridWidth = this.puzzle.targetGrid?.[0]?.length || 32;
+    const engine = new CanvasEngine(canvas, gridWidth, gridHeight);
     engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette, 'homepage');
     
     const info = document.createElement('div');
