@@ -439,6 +439,9 @@ export class EditorView {
       } else if (this.currentMode === 'draw') {
         if (e.button === 0) {
           this.isPainting = true;
+          this.canvas.setPointerCapture(e.pointerId);
+          this.lastPointerId = e.pointerId;
+          this.attachGlobalPaintingListeners();
           this.paintAt(x, y);
         }
       }
@@ -466,20 +469,18 @@ export class EditorView {
         this.isDragging = false;
         this.canvas.style.cursor = 'grab';
       } else if (this.currentMode === 'draw' && this.isPainting) {
-        this.isPainting = false;
-        this.canvas.style.cursor = 'crosshair';
-        this.checkCompletion();
+        this.stopPainting();
       }
     });
 
     this.canvas.addEventListener('pointerleave', () => {
+      // Only handle pan mode cleanup on leave
       if (this.currentMode === 'pan' && this.isDragging) {
         this.isDragging = false;
         this.canvas.style.cursor = 'grab';
-      } else if (this.currentMode === 'draw' && this.isPainting) {
-        this.isPainting = false;
-        this.canvas.style.cursor = 'crosshair';
       }
+      // Note: Drawing mode no longer stops on pointerleave
+      // The global pointerup handler will stop painting
     });
 
     this.canvas.addEventListener('contextmenu', (e) => {
@@ -581,6 +582,73 @@ export class EditorView {
     }
   }
 
+  attachGlobalPaintingListeners() {
+    // Remove any existing global listeners first
+    this.detachGlobalPaintingListeners();
+    
+    // Create bound handlers using the properties from constructor
+    this.boundGlobalPointerMove = (e) => this.handleGlobalPointerMove(e);
+    this.boundGlobalPointerUp = (e) => this.handleGlobalPointerUp(e);
+    
+    // Attach to document
+    document.addEventListener('pointermove', this.boundGlobalPointerMove);
+    document.addEventListener('pointerup', this.boundGlobalPointerUp);
+  }
+
+  detachGlobalPaintingListeners() {
+    if (this.boundGlobalPointerMove) {
+      document.removeEventListener('pointermove', this.boundGlobalPointerMove);
+      this.boundGlobalPointerMove = null;
+    }
+    if (this.boundGlobalPointerUp) {
+      document.removeEventListener('pointerup', this.boundGlobalPointerUp);
+      this.boundGlobalPointerUp = null;
+    }
+  }
+
+  handleGlobalPointerMove(e) {
+    if (!this.isPainting) return;
+    
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Continue painting even if coordinates are outside canvas
+    this.paintAt(x, y);
+  }
+
+  handleGlobalPointerUp(e) {
+    if (!this.isPainting) return;
+    
+    // Only process if it's the same pointer we captured
+    if (e.pointerId === this.lastPointerId) {
+      this.stopPainting();
+    }
+  }
+
+  stopPainting() {
+    if (!this.isPainting) return;
+    
+    this.isPainting = false;
+    this.canvas.style.cursor = 'crosshair';
+    
+    // Release pointer capture
+    if (this.lastPointerId !== undefined) {
+      try {
+        this.canvas.releasePointerCapture(this.lastPointerId);
+      } catch (e) {
+        // Pointer might already be released
+      }
+      this.lastPointerId = undefined;
+    }
+    
+    // Detach global listeners
+    this.detachGlobalPaintingListeners();
+    
+    // Check completion
+    this.checkCompletion();
+  }
+
   updateProgress() {
     const percent = this.storage.calculatePercent(this.puzzle);
     const progressEl = this.element.querySelector('header span');
@@ -632,6 +700,9 @@ export class EditorView {
   }
 
   destroy() {
+    // Clean up global painting listeners
+    this.detachGlobalPaintingListeners();
+    
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler);
     }
