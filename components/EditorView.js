@@ -391,6 +391,7 @@ export class EditorView {
       this.engine.centerCanvas();
     }
     
+    this.updateZoomLabel();
     this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
   }
 
