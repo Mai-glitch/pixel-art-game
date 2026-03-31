@@ -277,7 +277,20 @@ export class EditorView {
   }
 
   resetView() {
-    this.engine.resetView();
+    // Calculer le scale optimal pour que le canvas rentre dans le container
+    const canvasContainer = this.element.querySelector('.canvas-container');
+    const containerRect = canvasContainer.getBoundingClientRect();
+    const availableSpace = Math.min(
+      containerRect.width - 32,
+      containerRect.height - 32
+    );
+    
+    const optimalSize = this.calculateOptimalCanvasSize();
+    const scale = Math.min(1, availableSpace / optimalSize);
+    const newScale = Math.max(this.engine.transform.minScale, scale);
+    
+    this.engine.transform.scale = newScale;
+    this.engine.centerCanvas();
     this.updateZoomLabel();
     this.engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette);
   }
