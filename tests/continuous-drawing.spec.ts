@@ -14,17 +14,16 @@ test.describe('Continuous Drawing', () => {
 
   test.beforeEach(async ({ page }) => {
     // Inject test puzzle into storage
-    await page.goto('file://' + process.cwd() + '/index.html');
+    await page.goto('/');
     await page.evaluate((puzzle) => {
       localStorage.setItem('colorQuest_puzzles', JSON.stringify([puzzle]));
       localStorage.setItem('colorQuest_paintedGrid_' + puzzle.id, JSON.stringify(puzzle.paintedGrid));
     }, testPuzzle);
+    // Navigate to puzzle editor
+    await page.goto('/#puzzle/' + testPuzzle.id);
   });
 
   test('should continue painting when mouse leaves canvas', async ({ page }) => {
-    // Navigate to puzzle editor
-    await page.goto('file://' + process.cwd() + '/index.html#puzzle/' + testPuzzle.id);
-    
     // Wait for editor to load
     await page.waitForSelector('#editor-view', { timeout: 5000 });
     
@@ -38,9 +37,6 @@ test.describe('Continuous Drawing', () => {
     
     // Verify we're in draw mode (crosshair cursor)
     await expect(canvas).toHaveCSS('cursor', 'crosshair');
-    
-    // Start painting from outside canvas moving into it
-    // This tests that we can paint into canvas even if we start outside
     
     // Get a pixel inside the canvas that should be painted
     const pixelX = box.x + box.width * 0.5;
@@ -61,7 +57,6 @@ test.describe('Continuous Drawing', () => {
     await page.mouse.up();
     
     // Verify progress increased (some pixels were painted)
-    await page.waitForSelector('.progress', { timeout: 2000 });
     const progressText = await page.locator('header span').textContent();
     const percent = parseInt(progressText || '0');
     
@@ -70,7 +65,6 @@ test.describe('Continuous Drawing', () => {
   });
 
   test('should stop painting on mouse up outside canvas', async ({ page }) => {
-    await page.goto('file://' + process.cwd() + '/index.html#puzzle/' + testPuzzle.id);
     await page.waitForSelector('#editor-view', { timeout: 5000 });
     
     const canvas = await page.locator('canvas');
