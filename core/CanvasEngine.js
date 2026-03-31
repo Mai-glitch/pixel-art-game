@@ -87,18 +87,20 @@ export class CanvasEngine {
     const scaledWidth = this.canvasWidth * this.transform.scale;
     const scaledHeight = this.canvasHeight * this.transform.scale;
     const rect = this.canvas.getBoundingClientRect();
-    
+
     if (scaledWidth <= rect.width) {
-      this.transform.offsetX = 0;
+      // CENTER horizontally when canvas fits
+      this.transform.offsetX = (rect.width - scaledWidth) / 2;
     } else {
       this.transform.offsetX = Math.max(
         rect.width - scaledWidth,
         Math.min(0, this.transform.offsetX)
       );
     }
-    
+
     if (scaledHeight <= rect.height) {
-      this.transform.offsetY = 0;
+      // CENTER vertically when canvas fits
+      this.transform.offsetY = (rect.height - scaledHeight) / 2;
     } else {
       this.transform.offsetY = Math.max(
         rect.height - scaledHeight,
