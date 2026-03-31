@@ -644,7 +644,7 @@ export class EditorView {
     
     // Check bounds
     if (currentPos.x < 0 || currentPos.x >= 32 || currentPos.y < 0 || currentPos.y >= 32) {
-      // Still update lastPaintedPos even if outside bounds so we can paint back in
+      // Skip painting if outside bounds, lastPaintedPos will remain unchanged
       return;
     }
     
