@@ -203,16 +203,32 @@ export class CanvasEngine {
     thumbCanvas.height = 64;
     const thumbCtx = thumbCanvas.getContext('2d');
 
-    // For thumbnails, use a fixed size and adapt the image
-    const maxGridDimension = Math.max(this.gridWidth, this.gridHeight);
-    const thumbPixelSize = 64 / maxGridDimension;
+    // Clear with transparent/background
+    thumbCtx.fillStyle = '#ffffff';
+    thumbCtx.fillRect(0, 0, 64, 64);
 
+    // Calculate pixel size to fit the larger dimension (cover behavior)
+    const maxGridDimension = Math.max(this.gridWidth, this.gridHeight);
+    const pixelSize = 64 / maxGridDimension;
+
+    // Calculate offsets to center the image
+    const totalWidth = this.gridWidth * pixelSize;
+    const totalHeight = this.gridHeight * pixelSize;
+    const offsetX = (64 - totalWidth) / 2;
+    const offsetY = (64 - totalHeight) / 2;
+
+    // Draw the grid centered
     for (let y = 0; y < this.gridHeight; y++) {
       for (let x = 0; x < this.gridWidth; x++) {
         const colorIndex = targetGrid[y]?.[x] || 0;
         if (colorIndex > 0) {
           thumbCtx.fillStyle = palette[colorIndex - 1];
-          thumbCtx.fillRect(x * thumbPixelSize, y * thumbPixelSize, thumbPixelSize, thumbPixelSize);
+          thumbCtx.fillRect(
+            offsetX + x * pixelSize,
+            offsetY + y * pixelSize,
+            pixelSize,
+            pixelSize
+          );
         }
       }
     }
