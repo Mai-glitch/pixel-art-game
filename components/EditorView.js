@@ -530,6 +530,8 @@ export class EditorView {
         this.isDragging = true;
         this.lastMousePos = { x: e.clientX, y: e.clientY };
         this.canvas.style.cursor = 'grabbing';
+        this.canvas.setPointerCapture(e.pointerId);
+        this.lastPointerId = e.pointerId;
       } else if (this.currentMode === 'draw') {
         if (e.button === 0) {
           this.isPainting = true;
@@ -562,19 +564,23 @@ export class EditorView {
       if (this.currentMode === 'pan' && this.isDragging) {
         this.isDragging = false;
         this.canvas.style.cursor = 'grab';
+        if (this.lastPointerId !== undefined) {
+          try {
+            this.canvas.releasePointerCapture(this.lastPointerId);
+          } catch (e) {
+            // Pointer might already be released
+          }
+          this.lastPointerId = undefined;
+        }
       } else if (this.currentMode === 'draw' && this.isPainting) {
         this.stopPainting();
       }
     });
 
     this.canvas.addEventListener('pointerleave', () => {
-      // Only handle pan mode cleanup on leave
-      if (this.currentMode === 'pan' && this.isDragging) {
-        this.isDragging = false;
-        this.canvas.style.cursor = 'grab';
-      }
-      // Note: Drawing mode no longer stops on pointerleave
-      // The global pointerup handler will stop painting
+      // Note: Pan and draw modes no longer stop on pointerleave
+      // setPointerCapture ensures events continue even when cursor leaves canvas
+      // The pointerup handler will clean up when the user releases the mouse button
     });
 
     this.canvas.addEventListener('contextmenu', (e) => {
