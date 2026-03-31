@@ -48,12 +48,6 @@ export class CanvasEngine {
     this.canvas.style.maxWidth = `${this.canvasWidth}px`;
   }
 
-  resetView() {
-    this.transform.scale = 1.0;
-    this.transform.offsetX = 0;
-    this.transform.offsetY = 0;
-  }
-
   centerCanvas() {
     this.transform.offsetX = 0;
     this.transform.offsetY = 0;
