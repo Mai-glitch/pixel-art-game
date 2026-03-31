@@ -1,7 +1,8 @@
 export class ImageConverter {
-  constructor() {
+  constructor(width = 32, height = 32) {
     this.maxColors = 8;
-    this.gridSize = 32;
+    this.gridWidth = width;
+    this.gridHeight = height;
   }
 
   async convertImage(file, name) {
@@ -9,11 +10,33 @@ export class ImageConverter {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    canvas.width = this.gridSize;
-    canvas.height = this.gridSize;
-    ctx.drawImage(image, 0, 0, this.gridSize, this.gridSize);
+    canvas.width = this.gridWidth;
+    canvas.height = this.gridHeight;
     
-    const imageData = ctx.getImageData(0, 0, this.gridSize, this.gridSize);
+    // Resize image preserving aspect ratio
+    const imageRatio = image.width / image.height;
+    const targetRatio = this.gridWidth / this.gridHeight;
+    
+    let drawWidth, drawHeight, offsetX, offsetY;
+    
+    if (imageRatio > targetRatio) {
+      // Image wider than target
+      drawWidth = this.gridHeight * imageRatio;
+      drawHeight = this.gridHeight;
+      offsetX = (this.gridWidth - drawWidth) / 2;
+      offsetY = 0;
+    } else {
+      // Image taller than target
+      drawWidth = this.gridWidth;
+      drawHeight = this.gridWidth / imageRatio;
+      offsetX = 0;
+      offsetY = (this.gridHeight - drawHeight) / 2;
+    }
+    
+    // Center and draw image
+    ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+    
+    const imageData = ctx.getImageData(0, 0, this.gridWidth, this.gridHeight);
     const pixels = this.extractPixels(imageData);
     
     const colors = this.extractColors(pixels, this.maxColors);
@@ -23,7 +46,7 @@ export class ImageConverter {
       id: this.generateId(),
       name: name || 'Untitled',
       targetGrid: grid,
-      paintedGrid: Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(0)),
+      paintedGrid: Array(this.gridHeight).fill(null).map(() => Array(this.gridWidth).fill(0)),
       palette: palette.slice(0, Math.max(3, palette.length)),
       completedPercent: 0,
       lastPlayed: null
@@ -60,7 +83,6 @@ export class ImageConverter {
   }
 
   extractColors(pixels, maxColors) {
-    // Filter out transparent pixels
     const opaquePixels = pixels.filter(p => p.a > 128);
     if (opaquePixels.length === 0) return [{ r: 128, g: 128, b: 128 }];
     
@@ -72,16 +94,13 @@ export class ImageConverter {
   }
 
   kMeans(pixels, k) {
-    // Initialize centroids randomly from pixels
     let centroids = [];
     for (let i = 0; i < k; i++) {
       const randomPixel = pixels[Math.floor(Math.random() * pixels.length)];
       centroids.push({ r: randomPixel.r, g: randomPixel.g, b: randomPixel.b });
     }
     
-    // Iterate until convergence
     for (let iteration = 0; iteration < 20; iteration++) {
-      // Assign pixels to nearest centroid
       const clusters = Array(k).fill(null).map(() => []);
       
       pixels.forEach(pixel => {
@@ -104,7 +123,6 @@ export class ImageConverter {
         clusters[closestCentroid].push(pixel);
       });
       
-      // Update centroids
       let changed = false;
       clusters.forEach((cluster, i) => {
         if (cluster.length === 0) return;
@@ -133,10 +151,10 @@ export class ImageConverter {
     const palette = colors.map(c => this.rgbToHex(c.r, c.g, c.b));
     const grid = [];
     
-    for (let y = 0; y < this.gridSize; y++) {
+    for (let y = 0; y < this.gridHeight; y++) {
       const row = [];
-      for (let x = 0; x < this.gridSize; x++) {
-        const pixel = pixels[y * this.gridSize + x];
+      for (let x = 0; x < this.gridWidth; x++) {
+        const pixel = pixels[y * this.gridWidth + x];
         if (pixel.a < 128) {
           row.push(0);
         } else {
