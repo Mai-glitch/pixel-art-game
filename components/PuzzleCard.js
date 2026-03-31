@@ -41,15 +41,7 @@ export class PuzzleCard {
     const gridHeight = this.puzzle.targetGrid?.length || 32;
     const gridWidth = this.puzzle.targetGrid?.[0]?.length || 32;
     const engine = new CanvasEngine(canvas, gridWidth, gridHeight);
-    
-    // Use createThumbnail for proper square thumbnail generation with centering
-    const thumbnailDataUrl = engine.createThumbnail(this.puzzle.targetGrid, this.puzzle.palette);
-    const img = new Image();
-    img.onload = () => {
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, 64, 64);
-    };
-    img.src = thumbnailDataUrl;
+    engine.render(this.puzzle.targetGrid, this.puzzle.paintedGrid, this.puzzle.palette, 'homepage');
     
     const info = document.createElement('div');
     info.style.cssText = `
